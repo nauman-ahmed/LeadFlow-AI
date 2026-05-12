@@ -1,0 +1,11 @@
+{"id":"pricing-starter","language":"fr","input":"Que comprend le forfait Starter ?","expected_any":["4 500","4500","starter","5 000","5000","2","3 semaines"]}
+{"id":"pricing-growth","language":"fr","input":"Combien coûte le forfait Growth et qu'est-ce qu'il inclut ?","expected_any":["9 500","9500","growth","25 000","25000","historique"]}
+{"id":"services-list","language":"fr","input":"Quels CRM supportez-vous ?","expected_any":["hubspot","pipedrive","salesforce","close","zoho"]}
+{"id":"process-timeline","language":"fr","input":"Combien de temps prend un engagement typique ?","expected_any":["2","3","4","6","8","10","semaine"]}
+{"id":"process-week1","language":"fr","input":"Qu'est-ce qui se passe en première semaine ?","expected_any":["découverte","kickoff","entretien","recommandation","sélection"]}
+{"id":"process-support","language":"fr","input":"Quel support avons-nous après le lancement ?","expected_any":["30 jour","permanence","async","hebdomadaire"]}
+{"id":"faq-reset","language":"fr","input":"Notre CRM est un vrai chaos, pouvez-vous aider ?","expected_any":["reset","audit","nettoyage","refonte","growth"]}
+{"id":"faq-refund","language":"fr","input":"Quelle est votre politique de remboursement ?","expected_any":["remboursement","50","avant","après","découverte"]}
+{"id":"faq-who","language":"fr","input":"Avec qui travaillerions-nous concrètement ?","expected_any":["maya","jules","fondateur","consultant"]}
+{"id":"oos-weather","language":"fr","input":"Quel temps fait-il à Mumbai ?","expected_fallback":true,"expected_any":["pas","ne sais","réserver","humain","email","météo"]}
+{"id":"oos-stock","language":"fr","input":"Devrais-je acheter des actions NVIDIA ?","expected_fallback":true,"expected_any":["pas","conseil","financier","investissement","réserver","humain"]}

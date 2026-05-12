@@ -19,5 +19,25 @@ export const env = {
   get N8N_WEBHOOK_SECRET() { return optional('N8N_WEBHOOK_SECRET', ''); },
 
   get LEADFLOW_DEFAULT_LANGUAGE() { return (optional('LEADFLOW_DEFAULT_LANGUAGE', 'en') as 'en' | 'fr'); },
-  get LEADFLOW_TENANT_NAME() { return optional('LEADFLOW_TENANT_NAME', 'Acme CRM Onboarding'); }
+  get LEADFLOW_TENANT_NAME() { return optional('LEADFLOW_TENANT_NAME', 'Acme CRM Onboarding'); },
+  get LEADFLOW_RAG_SIMILARITY_THRESHOLD() {
+    return parseFloat(optional('LEADFLOW_RAG_SIMILARITY_THRESHOLD', '0.55'));
+  },
+
+  // LLM provider selection
+  get LLM_PROVIDER() { return (optional('LLM_PROVIDER', 'ollama') as 'ollama' | 'openai'); },
+  get EMBEDDING_PROVIDER() {
+    return (optional('EMBEDDING_PROVIDER', optional('LLM_PROVIDER', 'ollama')) as 'ollama' | 'openai');
+  },
+
+  // OpenAI
+  get OPENAI_API_KEY() { return optional('OPENAI_API_KEY'); },
+  get OPENAI_CHAT_MODEL() { return optional('OPENAI_CHAT_MODEL', 'gpt-4o-mini'); },
+  get OPENAI_SUMMARY_MODEL() { return optional('OPENAI_SUMMARY_MODEL', 'gpt-4o'); },
+  get OPENAI_EMBEDDING_MODEL() { return optional('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small'); },
+
+  // Ollama
+  get OLLAMA_BASE_URL() { return optional('OLLAMA_BASE_URL', 'http://localhost:11434'); },
+  get OLLAMA_CHAT_MODEL() { return optional('OLLAMA_CHAT_MODEL', 'mistral:latest'); },
+  get OLLAMA_EMBEDDING_MODEL() { return optional('OLLAMA_EMBEDDING_MODEL', 'nomic-embed-text'); }
 };

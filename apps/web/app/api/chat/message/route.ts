@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
 import { callN8n } from '@/lib/n8n';
+import { searchKB, formatContext } from '@/lib/rag';
+import { chat, type ChatMessage } from '@/lib/llm';
+import { loadPrompt, fillTemplate, promptVersion } from '@/lib/prompts';
+import { env } from '@/lib/env';
 import type { Language } from '@/lib/types';
 
-interface N8nReply {
-  reply?: string;
-  prompt_version?: string;
-  language?: Language;
-}
+const HISTORY_TURNS = 6; // last N messages used as conversation context
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
@@ -84,44 +84,94 @@ export async function POST(req: Request) {
     isNewLead = true;
   }
 
-  // 2. Persist the user message.
+  // 2. Persist the user message before anything that can fail.
   await sb.from('messages').insert({
     conversation_id: conversationId,
     role: 'user',
     content: message
   });
 
-  // 3. Ask n8n for the reply (stub today; RAG/LLM in Sprint 2).
-  let reply = '(no reply)';
-  let promptVersion: string | undefined;
+  // 3. Fetch recent history for context (oldest first, excluding tool events).
+  const { data: history } = await sb
+    .from('messages')
+    .select('role, content')
+    .eq('conversation_id', conversationId)
+    .neq('role', 'tool')
+    .order('created_at', { ascending: false })
+    .limit(HISTORY_TURNS * 2);
+
+  const historyMessages: ChatMessage[] = (history ?? [])
+    .reverse()
+    .filter((m) => m.role === 'user' || m.role === 'assistant')
+    .slice(0, -1) // drop the just-inserted user message; we add it explicitly below
+    .map((m) => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content as string
+    }));
+
+  // 4. RAG search.
+  let reply = '';
+  let usedFallback = false;
+  let topScore = 0;
+  let kbHits = 0;
+  let modelUsed = '';
+  let providerUsed: 'ollama' | 'openai' = env.LLM_PROVIDER;
+  let promptName = 'system';
 
   try {
-    const n8nRes = await callN8n<N8nReply>('/leadflow/chat-turn', {
-      session_id: sessionId,
-      message,
-      language,
-      lead_id: leadId,
-      conversation_id: conversationId
+    const hits = await searchKB(message, language, { threshold: 0.35, limit: 5 });
+    kbHits = hits.length;
+    topScore = hits[0]?.similarity ?? 0;
+
+    const threshold = env.LEADFLOW_RAG_SIMILARITY_THRESHOLD;
+    const grounded = topScore >= threshold;
+
+    let systemTemplate: string;
+    if (grounded) {
+      systemTemplate = loadPrompt('system', language);
+    } else {
+      systemTemplate = loadPrompt('fallback', language);
+      usedFallback = true;
+      promptName = 'fallback';
+    }
+
+    const context = grounded ? formatContext(hits.slice(0, 3)) : '';
+    const system = fillTemplate(systemTemplate, {
+      TENANT_NAME: env.LEADFLOW_TENANT_NAME,
+      KB_CONTEXT: context,
+      HISTORY: ''
     });
-    reply = n8nRes?.reply ?? reply;
-    promptVersion = n8nRes?.prompt_version;
+
+    const llmMessages: ChatMessage[] = [
+      { role: 'system', content: system },
+      ...historyMessages,
+      { role: 'user', content: message }
+    ];
+
+    const result = await chat(llmMessages, { temperature: 0.3, maxTokens: 400 });
+    reply = result.content.trim();
+    modelUsed = result.model;
+    providerUsed = result.provider;
   } catch (err) {
+    console.error('[chat/message] AI pipeline failed', err);
     reply =
       language === 'fr'
-        ? "Désolé, je rencontre un souci technique. Pouvez-vous réessayer ?"
-        : "Sorry, I'm having a technical hiccup. Please try again.";
-    console.error('[chat/message] n8n call failed', err);
+        ? "Désolé, je rencontre un souci technique. Pouvez-vous réessayer dans un instant ?"
+        : "Sorry, I'm having a technical hiccup. Please try again in a moment.";
+    usedFallback = true;
+    promptName = 'error';
   }
 
-  // 4. Persist the assistant message.
+  // 5. Persist the assistant message.
+  const tag = `${promptName}-${promptVersion()}-${providerUsed}-${modelUsed || 'na'}`;
   await sb.from('messages').insert({
     conversation_id: conversationId,
     role: 'assistant',
     content: reply,
-    prompt_version: promptVersion ?? null
+    prompt_version: tag
   });
 
-  // 5. Fire-and-forget CRM event on new lead.
+  // 6. Fire-and-forget CRM sync to n8n for downstream integrations.
   if (isNewLead) {
     callN8n('/leadflow/crm-sync', {
       event: 'lead.created',
@@ -139,7 +189,12 @@ export async function POST(req: Request) {
     lead_id: leadId,
     conversation_id: conversationId,
     is_new_lead: isNewLead,
-    prompt_version: promptVersion
+    prompt_version: tag,
+    rag: {
+      hits: kbHits,
+      top_score: Number(topScore.toFixed(3)),
+      used_fallback: usedFallback
+    }
   });
 }
 

@@ -56,3 +56,6 @@ tmp/
 # KB build artifacts
 kb/processed/
 kb/.cache/
+
+# Eval reports
+evals/reports/

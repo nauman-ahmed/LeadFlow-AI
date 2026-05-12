@@ -18,7 +18,13 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:schema": "echo '\u26A0\uFE0F  Apply infra/supabase/schema.sql in the Supabase SQL Editor.'",
     "db:seed": "echo '\u26A0\uFE0F  Apply infra/supabase/seed.sql in the Supabase SQL Editor.'",
-    "n8n:workflows": "echo '\u2139\uFE0F  Import JSON files from n8n/workflows/ via the n8n UI: Workflows -> + -> Import from File.'"
+    "n8n:workflows": "echo '\u2139\uFE0F  Import JSON files from n8n/workflows/ via the n8n UI: Workflows -> + -> Import from File.'",
+    "ingest:kb": "node scripts/ingest-kb.mjs",
+    "eval:kb": "node scripts/eval-kb.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"

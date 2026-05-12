@@ -1,0 +1,15 @@
+{"id":"pricing-starter","language":"en","input":"What's included in the Starter package?","expected_any":["4,500","4500","starter","5,000","5000 contacts","2-3 weeks","2–3 weeks"]}
+{"id":"pricing-growth","language":"en","input":"How much is the Growth package and what do I get?","expected_any":["9,500","9500","growth","25,000","25000","historical"]}
+{"id":"pricing-scale","language":"en","input":"Tell me about the most expensive option.","expected_any":["18,000","18000","scale","integrations","multi-team","multi team"]}
+{"id":"services-list","language":"en","input":"What CRMs do you support?","expected_any":["hubspot","pipedrive","salesforce","close","zoho"]}
+{"id":"services-not","language":"en","input":"Can you build a custom mobile app for us?","expected_any":["don't","not","partner","recommend","outside","scope"]}
+{"id":"process-timeline","language":"en","input":"How long does a typical engagement take?","expected_any":["2","3","4","6","8","10","week"]}
+{"id":"process-week1","language":"en","input":"What happens in the first week?","expected_any":["discovery","kickoff","interview","recommendation","selection"]}
+{"id":"process-migration","language":"en","input":"When does data migration happen?","expected_any":["friday","sandbox","sample","clean","deduplic"]}
+{"id":"process-support","language":"en","input":"What support do I get after launch?","expected_any":["30 day","30-day","30 days","office hours","async","weekly"]}
+{"id":"faq-reset","language":"en","input":"Our CRM is a complete mess, can you help?","expected_any":["reset","audit","clean","redesign","growth"]}
+{"id":"faq-refund","language":"en","input":"What's your refund policy?","expected_any":["refund","50%","50 percent","before","after","discovery"]}
+{"id":"faq-who","language":"en","input":"Who would I actually be working with?","expected_any":["maya","jules","founder","associate"]}
+{"id":"oos-weather","language":"en","input":"What's the weather like in Mumbai today?","expected_fallback":true,"expected_any":["don't","not sure","book","human","email","weather"]}
+{"id":"oos-stock","language":"en","input":"Should I buy NVIDIA stock?","expected_fallback":true,"expected_any":["don't","not","investment","financial","advice","book","human"]}
+{"id":"oos-coding","language":"en","input":"Can you write me a Python script that scrapes Amazon?","expected_fallback":true,"expected_any":["don't","not","scope","outside","book","human"]}
