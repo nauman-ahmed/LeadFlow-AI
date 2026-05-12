@@ -2,9 +2,23 @@
   "name": "@leadflow/widget",
   "version": "0.0.1",
   "private": true,
-  "description": "LeadFlow embeddable chat widget (React + Vite, single JS bundle). Scaffolded in Sprint 1.",
+  "description": "LeadFlow embeddable chat widget — single JS bundle via Vite lib mode.",
+  "type": "module",
   "scripts": {
-    "dev": "echo 'Sprint 1 will scaffold the Vite app here.' && exit 0",
-    "build": "echo 'Sprint 1 will scaffold the Vite app here.' && exit 0"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "postbuild": "node ../../scripts/copy-widget.mjs"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "vite": "^6.0.0",
+    "@vitejs/plugin-react": "^4.3.0"
   }
 }

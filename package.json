@@ -9,14 +9,19 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "npm run build:widget && concurrently -k -n web,widget -c blue,green \"npm:dev:web\" \"npm:dev:widget\"",
     "dev:web": "npm run dev --workspace=@leadflow/web",
     "dev:widget": "npm run dev --workspace=@leadflow/widget",
+    "build": "npm run build:widget && npm run build:web",
     "build:web": "npm run build --workspace=@leadflow/web",
     "build:widget": "npm run build --workspace=@leadflow/widget",
-    "db:schema": "echo '\u26A0\uFE0F  Apply infra/supabase/schema.sql in the Supabase SQL Editor, or psql with $DATABASE_URL.'",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:schema": "echo '\u26A0\uFE0F  Apply infra/supabase/schema.sql in the Supabase SQL Editor.'",
     "db:seed": "echo '\u26A0\uFE0F  Apply infra/supabase/seed.sql in the Supabase SQL Editor.'",
-    "n8n:workflows": "echo '\u2139\uFE0F  Import JSON files from n8n/workflows/ via the n8n UI: Workflows -> + -> Import from File.'",
-    "eval:kb": "echo 'Sprint 2 will add the eval runner.'"
+    "n8n:workflows": "echo '\u2139\uFE0F  Import JSON files from n8n/workflows/ via the n8n UI: Workflows -> + -> Import from File.'"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
   },
   "engines": {
     "node": ">=20"
