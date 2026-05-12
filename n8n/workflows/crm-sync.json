@@ -1,0 +1,52 @@
+{
+  "name": "LeadFlow — CRM Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "leadflow/crm-sync",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [260, 300],
+      "webhookId": "leadflow-crm-sync"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sprint 0 stub: log the inbound event and acknowledge.\n// Sprint 6 will: HMAC-sign + POST to HubSpot, write crm_events row, retry on failure.\n\nconst body = $json.body || $json;\nconst eventType = body.event || 'unknown';\nconst leadId = body.lead && body.lead.id;\n\nreturn [{\n  json: {\n    ok: true,\n    event_type: eventType,\n    lead_id: leadId,\n    received_at: new Date().toISOString(),\n    note: 'Sprint 0 stub — real CRM webhook + crm_events audit log lands in Sprint 6.'\n  }\n}];"
+      },
+      "id": "node-stub-handler",
+      "name": "Stub Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "node-respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [700, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Stub Handler", "type": "main", "index": 0 }]]
+    },
+    "Stub Handler": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "tags": []
+}

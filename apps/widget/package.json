@@ -1,0 +1,10 @@
+{
+  "name": "@leadflow/widget",
+  "version": "0.0.1",
+  "private": true,
+  "description": "LeadFlow embeddable chat widget (React + Vite, single JS bundle). Scaffolded in Sprint 1.",
+  "scripts": {
+    "dev": "echo 'Sprint 1 will scaffold the Vite app here.' && exit 0",
+    "build": "echo 'Sprint 1 will scaffold the Vite app here.' && exit 0"
+  }
+}

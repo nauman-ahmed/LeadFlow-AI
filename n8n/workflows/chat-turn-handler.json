@@ -1,0 +1,52 @@
+{
+  "name": "LeadFlow — Chat Turn Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "leadflow/chat-turn",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [260, 300],
+      "webhookId": "leadflow-chat-turn"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sprint 0 stub: validate payload + echo back a deterministic reply.\n// Sprint 2 will replace this with: RAG search -> LLM call -> grounded reply.\n\nconst body = $json.body || $json;\nconst sessionId = body.session_id || 'no-session';\nconst userMessage = body.message || '';\nconst language = body.language || 'en';\n\nconst stub = language === 'fr'\n  ? `Bonjour ! C'est une réponse provisoire (Sprint 0). Votre message : \"${userMessage}\".`\n  : `Hi! This is a Sprint 0 stub reply. Your message: \"${userMessage}\".`;\n\nreturn [{\n  json: {\n    session_id: sessionId,\n    language,\n    reply: stub,\n    prompt_version: 'stub-0.1',\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "node-stub-reply",
+      "name": "Stub Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "node-respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [700, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Stub Reply", "type": "main", "index": 0 }]]
+    },
+    "Stub Reply": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "tags": []
+}

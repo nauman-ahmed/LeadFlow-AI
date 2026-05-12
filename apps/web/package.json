@@ -1,0 +1,11 @@
+{
+  "name": "@leadflow/web",
+  "version": "0.0.1",
+  "private": true,
+  "description": "LeadFlow web app: landing page + chat backend API + mock CRM dashboard (Next.js App Router). Scaffolded in Sprint 1.",
+  "scripts": {
+    "dev": "echo 'Sprint 1 will scaffold the Next.js app here.' && exit 0",
+    "build": "echo 'Sprint 1 will scaffold the Next.js app here.' && exit 0",
+    "start": "echo 'Sprint 1 will scaffold the Next.js app here.' && exit 0"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "language": "fr",
+  "widget": {
+    "launcher": {
+      "open_aria": "Ouvrir le chat",
+      "close_aria": "Fermer le chat"
+    },
+    "header": {
+      "title": "Assistant LeadFlow",
+      "subtitle": "Répond généralement en quelques secondes"
+    },
+    "input": {
+      "placeholder": "Tapez votre message…",
+      "send": "Envoyer"
+    },
+    "status": {
+      "typing": "L'assistant écrit…",
+      "offline": "Hors ligne — réessayez plus tard.",
+      "error": "Une erreur s'est produite. Veuillez réessayer."
+    },
+    "buttons": {
+      "book_call": "Prendre rendez-vous",
+      "talk_to_human": "Parler à un humain",
+      "share_email": "Partager mon email",
+      "yes": "Oui",
+      "no": "Non"
+    },
+    "system_messages": {
+      "greeting": "Bonjour ! Je suis LeadFlow. Comment puis-je vous aider aujourd'hui ?",
+      "handoff_started": "Je vous mets en relation avec un humain — pourriez-vous partager un email pour le suivi ?",
+      "booked": "C'est noté — vous recevrez un email de confirmation très bientôt.",
+      "language_switched": "Passage en français."
+    },
+    "privacy_note": "Cette conversation est enregistrée à des fins d'amélioration et de suivi.",
+    "footer_powered_by": "Propulsé par LeadFlow AI"
+  }
+}

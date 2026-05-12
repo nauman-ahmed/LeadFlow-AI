@@ -1,0 +1,24 @@
+{
+  "name": "leadflow-ai",
+  "version": "0.0.1",
+  "private": true,
+  "description": "LeadFlow AI — website chatbot + voice agent for inbound lead qualification, with KB-grounded answers, calendar booking, CRM sync, human handoff, and multi-language support.",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=@leadflow/web",
+    "dev:widget": "npm run dev --workspace=@leadflow/widget",
+    "build:web": "npm run build --workspace=@leadflow/web",
+    "build:widget": "npm run build --workspace=@leadflow/widget",
+    "db:schema": "echo '\u26A0\uFE0F  Apply infra/supabase/schema.sql in the Supabase SQL Editor, or psql with $DATABASE_URL.'",
+    "db:seed": "echo '\u26A0\uFE0F  Apply infra/supabase/seed.sql in the Supabase SQL Editor.'",
+    "n8n:workflows": "echo '\u2139\uFE0F  Import JSON files from n8n/workflows/ via the n8n UI: Workflows -> + -> Import from File.'",
+    "eval:kb": "echo 'Sprint 2 will add the eval runner.'"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
