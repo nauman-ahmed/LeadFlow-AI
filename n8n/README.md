@@ -11,6 +11,7 @@ The workflows here are committed as JSON so the build is reproducible and review
 | `chat-turn-handler.json` | Receives a chat turn from the widget, returns an assistant reply. | `POST /webhook/leadflow/chat-turn` | 1 (stub now, AI in 2) |
 | `crm-sync.json` | Receives internal events, fans out to mock CRM / HubSpot. | `POST /webhook/leadflow/crm-sync` | 1 (stub now, real CRM in 6) |
 | `cal-webhook.json` | Cal.com → Supabase: HMAC-verify Cal events and upsert `appointments`. | `POST /webhook/leadflow/cal-webhook` | 3 |
+| `vapi-server-proxy.json` | Forwards Vapi `tool-calls` + `end-of-call-report` to Next.js `/api/voice/server` with `x-leadflow-secret`. | `POST /webhook/leadflow/vapi-server` | 4 |
 
 Each new sprint adds more workflows (RAG ingestion, Cal.com webhooks, Vapi tool dispatcher, post-call processing, handoff, etc.).
 
@@ -108,6 +109,21 @@ After importing `cal-webhook.json` and opening it in n8n:
 4. Test by creating a booking in the chat widget (or directly on Cal.com) and confirm a new row appears in Supabase `appointments`.
 
 > The chat-initiated booking path writes the appointment row immediately via the Next.js API, so this webhook is the **mirror** that keeps Supabase in sync when bookings are created/changed outside the chat. The workflow is idempotent on `cal_booking_id`.
+
+## `vapi-server-proxy` (Sprint 4)
+
+Use this when your public tunnel lands on **n8n** (not Next.js). Vapi’s assistant **server URL** should point at:
+
+`https://<tunnel>/webhook/leadflow/vapi-server`
+
+After import, edit the **Config** node:
+
+1. `leadflow_app_url` — a URL n8n can reach for your Next app (local Docker n8n → Mac host: `http://host.docker.internal:3000`).
+2. `leadflow_secret` — same value as `N8N_WEBHOOK_SECRET` or `VAPI_WEBHOOK_SECRET` in the Next `.env` (the proxy adds it as `x-leadflow-secret`).
+
+**Alternative:** point Vapi’s server URL straight at `https://<tunnel>/api/voice/server` on Next and attach a [Vapi server credential](https://docs.vapi.ai/server-url/server-authentication) that sends the same secret header — then you can skip this workflow.
+
+Assistant template (system prompt, tools, artifact plan): `infra/vapi/assistant.json` — import or merge into the Vapi dashboard / API; replace `REPLACE_WITH_PUBLIC_HOST` in `server.url` (or use this n8n webhook URL instead).
 
 ## Updating a workflow
 

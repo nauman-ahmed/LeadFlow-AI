@@ -18,6 +18,12 @@ export const env = {
   get N8N_WEBHOOK_BASE_URL() { return optional('N8N_WEBHOOK_BASE_URL', 'http://localhost:5678/webhook'); },
   get N8N_WEBHOOK_SECRET() { return optional('N8N_WEBHOOK_SECRET', ''); },
 
+  /** Base URL of the Next.js app (for n8n → Next voice proxy). Default local dev. */
+  get LEADFLOW_APP_URL() { return optional('LEADFLOW_APP_URL', 'http://localhost:3000').replace(/\/$/, ''); },
+
+  /** Prefer this for `/api/voice/server`; falls back to `N8N_WEBHOOK_SECRET` when unset. */
+  get VAPI_WEBHOOK_SECRET() { return optional('VAPI_WEBHOOK_SECRET'); },
+
   get LEADFLOW_DEFAULT_LANGUAGE() { return (optional('LEADFLOW_DEFAULT_LANGUAGE', 'en') as 'en' | 'fr'); },
   get LEADFLOW_TENANT_NAME() { return optional('LEADFLOW_TENANT_NAME', 'Acme CRM Onboarding'); },
   get LEADFLOW_RAG_SIMILARITY_THRESHOLD() {

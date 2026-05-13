@@ -1,0 +1,110 @@
+{
+  "name": "LeadFlow — Acme Voice (template)",
+  "firstMessage": "Hi, thanks for calling Acme CRM Onboarding. I can answer questions about our services, check intro-call availability, or book a slot. How can I help today?",
+  "server": {
+    "url": "https://REPLACE_WITH_PUBLIC_HOST/api/voice/server"
+  },
+  "serverMessages": ["tool-calls", "end-of-call-report", "status-update"],
+  "artifactPlan": {
+    "recordingEnabled": true,
+    "loggingEnabled": true,
+    "transcriptPlan": {
+      "enabled": true,
+      "assistantName": "Agent",
+      "userName": "Caller"
+    }
+  },
+  "model": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "temperature": 0.3,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are the voice concierge for Acme CRM Onboarding, a fictional B2B SaaS. Keep spoken replies under 40 words unless the caller asks for detail. Before booking, confirm email spelling. For calendar tools, always pass timezone as IANA Region/City with a slash (e.g. Europe/Berlin)—if the caller says Europe Berlin, use Europe/Berlin. If a tool returns slots, read them to the user; if slots is empty, say no slots were found and offer another timezone or handoff. Use tools instead of inventing facts: search_kb for product/process questions, check_availability before proposing times, create_booking only after the caller picks a slot and gives an email, capture_lead when they share contact details, request_handoff if they insist on a human. Supported languages: English and French; mirror the caller's language."
+      }
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "capture_lead",
+          "description": "Persist caller contact details on the lead record.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "description": "Full name if provided" },
+              "email": { "type": "string", "description": "Email address" },
+              "phone": { "type": "string", "description": "Phone number in any format" },
+              "company": { "type": "string", "description": "Company name" }
+            }
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "search_kb",
+          "description": "Search the LeadFlow markdown knowledge base for grounded answers.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "query": { "type": "string", "description": "What to look up" }
+            },
+            "required": ["query"]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "check_availability",
+          "description": "Fetch upcoming Cal.com intro-call slots for the given IANA timezone.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "timezone": {
+                "type": "string",
+                "description": "IANA timezone: Region/City with a slash, e.g. Europe/Berlin. If the caller says words, use a slash between region and city."
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "create_booking",
+          "description": "Book the Cal.com intro call after the caller confirms a slot start time (UTC ISO from check_availability) and email.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "start": { "type": "string", "description": "UTC ISO start time from availability list" },
+              "email": { "type": "string" },
+              "name": { "type": "string" },
+              "timezone": { "type": "string", "description": "IANA Region/City with slash, e.g. Europe/Berlin (for calendar invite)" }
+            },
+            "required": ["start", "email"]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "request_handoff",
+          "description": "Flag the conversation for a human teammate when the caller needs an operator.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "reason": { "type": "string", "description": "Short reason for the handoff" }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "voice": {
+    "provider": "11labs",
+    "voiceId": "21m00Tcm4TlvDq8ikWAM"
+  }
+}

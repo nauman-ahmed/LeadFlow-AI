@@ -1,0 +1,111 @@
+{
+  "name": "LeadFlow — Vapi server proxy",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "leadflow/vapi-server",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [200, 320],
+      "webhookId": "leadflow-vapi-server"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "leadflow_app_url",
+              "value": "http://host.docker.internal:3000"
+            },
+            {
+              "name": "leadflow_secret",
+              "value": "REPLACE_WITH_N8N_WEBHOOK_SECRET"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [420, 320],
+      "notes": "Set leadflow_app_url to reachable Next.js (host.docker.internal works from Docker n8n on Mac/Win). leadflow_secret must match VAPI_WEBHOOK_SECRET or N8N_WEBHOOK_SECRET in Next .env."
+    },
+    {
+      "parameters": {
+        "jsCode": "const wh = $('Webhook').first().json;\nconst cfg = $('Config').first().json;\nconst body = wh.body !== undefined && wh.body !== null ? wh.body : wh;\nconst base = String(cfg.leadflow_app_url || '').replace(/\\/+$/, '');\nreturn [{ json: { vapi_body: body, forward_url: base + '/api/voice/server' } }];"
+      },
+      "id": "node-prepare",
+      "name": "Prepare body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, 320]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.forward_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-leadflow-secret",
+              "value": "={{ $('Config').first().json.leadflow_secret }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.vapi_body }}",
+        "options": {}
+      },
+      "id": "node-http",
+      "name": "Forward to Next",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, 320],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "node-respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1080, 320]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Config": {
+      "main": [[{ "node": "Prepare body", "type": "main", "index": 0 }]]
+    },
+    "Prepare body": {
+      "main": [[{ "node": "Forward to Next", "type": "main", "index": 0 }]]
+    },
+    "Forward to Next": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "tags": []
+}
