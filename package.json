@@ -20,7 +20,8 @@
     "db:seed": "echo '\u26A0\uFE0F  Apply infra/supabase/seed.sql in the Supabase SQL Editor.'",
     "n8n:workflows": "echo '\u2139\uFE0F  Import JSON files from n8n/workflows/ via the n8n UI: Workflows -> + -> Import from File.'",
     "ingest:kb": "node scripts/ingest-kb.mjs",
-    "eval:kb": "node scripts/eval-kb.mjs"
+    "eval:kb": "node scripts/eval-kb.mjs",
+    "test:calcom": "node scripts/test-calcom.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

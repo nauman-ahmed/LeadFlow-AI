@@ -23,6 +23,15 @@ export const env = {
   get LEADFLOW_RAG_SIMILARITY_THRESHOLD() {
     return parseFloat(optional('LEADFLOW_RAG_SIMILARITY_THRESHOLD', '0.55'));
   },
+  get LEADFLOW_QUALIFICATION_THRESHOLD() {
+    return parseInt(optional('LEADFLOW_QUALIFICATION_THRESHOLD', '60'), 10);
+  },
+
+  // Cal.com (Sprint 3)
+  get CAL_API_KEY() { return optional('CAL_API_KEY'); },
+  get CAL_EVENT_TYPE_ID() { return optional('CAL_EVENT_TYPE_ID'); },
+  get CAL_WEBHOOK_SECRET() { return optional('CAL_WEBHOOK_SECRET'); },
+  get CAL_DEFAULT_TIMEZONE() { return optional('CAL_DEFAULT_TIMEZONE', 'UTC'); },
 
   // LLM provider selection
   get LLM_PROVIDER() { return (optional('LLM_PROVIDER', 'ollama') as 'ollama' | 'openai'); },

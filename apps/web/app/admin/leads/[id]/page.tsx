@@ -17,13 +17,18 @@ export default async function LeadDetailPage({ params }: PageProps) {
   const { id } = await params;
   const sb = createServerClient();
 
-  const [{ data: lead }, { data: conversations }] = await Promise.all([
+  const [{ data: lead }, { data: conversations }, { data: appointments }] = await Promise.all([
     sb.from('leads').select('*').eq('id', id).maybeSingle(),
     sb
       .from('conversations')
       .select('id, channel, language, handoff, started_at, ended_at, messages(role, content, created_at, prompt_version)')
       .eq('lead_id', id)
-      .order('started_at', { ascending: false })
+      .order('started_at', { ascending: false }),
+    sb
+      .from('appointments')
+      .select('id, cal_booking_id, google_event_id, start_at, end_at, status, created_at, updated_at')
+      .eq('lead_id', id)
+      .order('start_at', { ascending: false })
   ]);
 
   if (!lead) notFound();
@@ -57,6 +62,45 @@ export default async function LeadDetailPage({ params }: PageProps) {
           <dt>Updated</dt><dd>{formatDate(lead.updated_at)}</dd>
         </dl>
       </section>
+
+      <h2>Appointments</h2>
+      {(!appointments || appointments.length === 0) && (
+        <div className="card empty">No appointments yet.</div>
+      )}
+      {appointments && appointments.length > 0 && (
+        <section className="card" style={{ marginBottom: 24 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ textAlign: 'left', borderBottom: '1px solid #e4e6eb' }}>
+                <th style={{ padding: '8px 6px' }}>Status</th>
+                <th style={{ padding: '8px 6px' }}>Start</th>
+                <th style={{ padding: '8px 6px' }}>End</th>
+                <th style={{ padding: '8px 6px' }}>Cal booking</th>
+              </tr>
+            </thead>
+            <tbody>
+              {appointments.map((a: any) => (
+                <tr key={a.id} style={{ borderBottom: '1px solid #f1f3f5' }}>
+                  <td style={{ padding: '8px 6px' }}>
+                    <span className={`badge status-${a.status === 'booked' ? 'booked' : 'lost'}`}>
+                      {a.status}
+                    </span>
+                  </td>
+                  <td style={{ padding: '8px 6px' }}>{formatDate(a.start_at)}</td>
+                  <td style={{ padding: '8px 6px' }}>{formatDate(a.end_at)}</td>
+                  <td style={{ padding: '8px 6px' }}>
+                    {a.cal_booking_id ? (
+                      <code style={{ fontSize: '0.85em' }}>{a.cal_booking_id}</code>
+                    ) : (
+                      <span className="muted">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       <h2>Conversations</h2>
       {(!conversations || conversations.length === 0) && (

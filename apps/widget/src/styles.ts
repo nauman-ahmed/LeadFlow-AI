@@ -177,4 +177,40 @@ export const widgetCSS = `
   border-top: 1px solid #f1f3f5;
 }
 .leadflow-footer a { color: #94a3b8; text-decoration: none; }
+
+.leadflow-slots {
+  align-self: flex-start;
+  max-width: 90%;
+  background: white;
+  border: 1px solid #e4e6eb;
+  border-radius: 14px;
+  border-bottom-left-radius: 4px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.leadflow-slots-label {
+  font-size: 12px;
+  color: #5c6470;
+  margin-bottom: 2px;
+}
+.leadflow-slot-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.leadflow-slot {
+  padding: 6px 10px;
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s ease, transform 0.1s ease;
+}
+.leadflow-slot:hover { background: #e0e7ff; transform: translateY(-1px); }
+.leadflow-slot:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 `;

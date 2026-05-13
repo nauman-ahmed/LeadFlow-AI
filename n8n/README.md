@@ -10,6 +10,7 @@ The workflows here are committed as JSON so the build is reproducible and review
 | --- | --- | --- | --- |
 | `chat-turn-handler.json` | Receives a chat turn from the widget, returns an assistant reply. | `POST /webhook/leadflow/chat-turn` | 1 (stub now, AI in 2) |
 | `crm-sync.json` | Receives internal events, fans out to mock CRM / HubSpot. | `POST /webhook/leadflow/crm-sync` | 1 (stub now, real CRM in 6) |
+| `cal-webhook.json` | Cal.com → Supabase: HMAC-verify Cal events and upsert `appointments`. | `POST /webhook/leadflow/cal-webhook` | 3 |
 
 Each new sprint adds more workflows (RAG ingestion, Cal.com webhooks, Vapi tool dispatcher, post-call processing, handoff, etc.).
 
@@ -89,6 +90,24 @@ The `.env` value `N8N_WEBHOOK_BASE_URL` is the **production** base — once you 
 - Inbound webhooks check the `x-leadflow-secret` header against `N8N_WEBHOOK_SECRET` (added in Sprint 1).
 - Outbound CRM webhooks are HMAC-signed (added in Sprint 6).
 - Every workflow writes one audit row to `crm_events` (Sprint 6) for traceability.
+
+## `cal-webhook` setup notes
+
+After importing `cal-webhook.json` and opening it in n8n:
+
+1. Open the **Config** node and replace the three placeholders:
+   - `webhook_secret` — must equal `CAL_WEBHOOK_SECRET` in `.env` and the secret you set on the Cal.com webhook subscriber.
+   - `supabase_url` — same as `SUPABASE_URL` in `.env`.
+   - `supabase_service_key` — same as `SUPABASE_SERVICE_ROLE_KEY` in `.env`.
+2. **Activate** the workflow.
+3. In Cal.com → Settings → Developer → Webhooks add a subscriber:
+   - URL: `https://<your-tunnel-domain>/webhook/leadflow/cal-webhook`
+     (locally: run `cloudflared tunnel --url http://localhost:5678` and use the tunnel URL)
+   - Subscribe to `BOOKING_CREATED`, `BOOKING_RESCHEDULED`, `BOOKING_CANCELLED`.
+   - Secret: same as `webhook_secret` above.
+4. Test by creating a booking in the chat widget (or directly on Cal.com) and confirm a new row appears in Supabase `appointments`.
+
+> The chat-initiated booking path writes the appointment row immediately via the Next.js API, so this webhook is the **mirror** that keeps Supabase in sync when bookings are created/changed outside the chat. The workflow is idempotent on `cal_booking_id`.
 
 ## Updating a workflow
 

@@ -6,6 +6,15 @@ import { chat, type ChatMessage } from '@/lib/llm';
 import { loadPrompt, fillTemplate, promptVersion } from '@/lib/prompts';
 import { env } from '@/lib/env';
 import type { Language } from '@/lib/types';
+import { qualify, bookingReadiness, type TranscriptTurn } from '@/lib/qualify';
+import {
+  checkAvailability,
+  pickProposedSlots,
+  isCalConfigured,
+  defaultTimeZone,
+  type AvailableSlot,
+  CalComError
+} from '@/lib/calcom';
 
 const HISTORY_TURNS = 6; // last N messages used as conversation context
 
@@ -14,6 +23,8 @@ export async function POST(req: Request) {
   const sessionId: string = body.session_id;
   const message: string = String(body.message ?? '').slice(0, 4000);
   const language: Language = body.language === 'fr' ? 'fr' : 'en';
+  const timezone: string =
+    (typeof body.timezone === 'string' && body.timezone) || defaultTimeZone();
 
   if (!sessionId || !message.trim()) {
     return NextResponse.json(
@@ -171,7 +182,82 @@ export async function POST(req: Request) {
     prompt_version: tag
   });
 
-  // 6. Fire-and-forget CRM sync to n8n for downstream integrations.
+  // 6. Qualification pass over the full transcript.
+  //    Cheap, deterministic, and lets the admin dashboard surface signals
+  //    without waiting for the post-conversation LLM summary in Sprint 6.
+  const { data: fullTranscript } = await sb
+    .from('messages')
+    .select('role, content')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: true });
+
+  const turns: TranscriptTurn[] = (fullTranscript ?? [])
+    .filter((m): m is { role: 'user' | 'assistant' | 'system' | 'tool'; content: string } =>
+      m.role === 'user' || m.role === 'assistant' || m.role === 'system' || m.role === 'tool'
+    )
+    .map((m) => ({ role: m.role, content: m.content }));
+
+  const qualification = qualify(turns, language);
+  const readiness = bookingReadiness(qualification, env.LEADFLOW_QUALIFICATION_THRESHOLD);
+
+  // Persist lead-level signals so /admin reflects the latest score.
+  const leadPatch: Record<string, unknown> = {
+    qualification_score: qualification.score
+  };
+  if (qualification.contact.name) leadPatch.name = qualification.contact.name;
+  if (qualification.contact.email) leadPatch.email = qualification.contact.email;
+  if (qualification.contact.phone) leadPatch.phone = qualification.contact.phone;
+  if (readiness.qualified) leadPatch.status = 'qualified';
+  // Merge tags (don't overwrite the source tags from creation).
+  const newTagSet = new Set<string>(qualification.tags);
+  const { data: leadTagRow } = await sb
+    .from('leads')
+    .select('tags')
+    .eq('id', leadId)
+    .maybeSingle();
+  for (const existingTag of leadTagRow?.tags ?? []) newTagSet.add(existingTag);
+  leadPatch.tags = Array.from(newTagSet);
+  await sb.from('leads').update(leadPatch).eq('id', leadId);
+
+  // 7. Propose Cal.com slots if qualified + email available + Cal configured.
+  let proposedSlots: AvailableSlot[] | null = null;
+  let pendingBooking: {
+    name: string | null;
+    email: string;
+    timezone: string;
+  } | null = null;
+  let bookingNote: string | null = null;
+
+  if (readiness.qualified && readiness.canBook && isCalConfigured()) {
+    try {
+      const allSlots = await checkAvailability({ timeZone: timezone, limit: 30 });
+      proposedSlots = pickProposedSlots(allSlots, 3);
+      if (proposedSlots.length > 0) {
+        pendingBooking = {
+          name: qualification.contact.name,
+          email: qualification.contact.email!, // guaranteed by readiness.canBook
+          timezone
+        };
+        bookingNote =
+          language === 'fr'
+            ? 'Voici quelques créneaux disponibles. Choisissez-en un pour confirmer le rendez-vous.'
+            : "Here are a few open slots. Pick one and I'll lock it in.";
+      }
+    } catch (err) {
+      const msg = err instanceof CalComError ? err.message : (err as Error).message;
+      console.error('[chat/message] checkAvailability failed', msg);
+    }
+  } else if (readiness.qualified && !readiness.canBook) {
+    // Bot should ask for the missing detail on the next turn — surface a hint
+    // so the widget knows we're in a "collecting contact" state if it wants
+    // to render something useful later.
+    bookingNote =
+      language === 'fr'
+        ? 'Pour réserver, partagez votre email.'
+        : 'To book, please share your email.';
+  }
+
+  // 8. Fire-and-forget CRM sync to n8n for downstream integrations.
   if (isNewLead) {
     callN8n('/leadflow/crm-sync', {
       event: 'lead.created',
@@ -180,6 +266,23 @@ export async function POST(req: Request) {
       correlation_id: sessionId,
       timestamp: new Date().toISOString()
     }).catch((err) => console.error('[chat/message] crm-sync failed', err));
+  }
+  if (readiness.qualified) {
+    callN8n('/leadflow/crm-sync', {
+      event: 'lead.qualified',
+      lead: {
+        id: leadId,
+        source: 'web',
+        language,
+        status: 'qualified',
+        qualification_score: qualification.score,
+        signals: qualification.signals,
+        contact: qualification.contact
+      },
+      conversation: { id: conversationId, channel: 'web' },
+      correlation_id: sessionId,
+      timestamp: new Date().toISOString()
+    }).catch((err) => console.error('[chat/message] qualified sync failed', err));
   }
 
   return NextResponse.json({
@@ -194,6 +297,18 @@ export async function POST(req: Request) {
       hits: kbHits,
       top_score: Number(topScore.toFixed(3)),
       used_fallback: usedFallback
+    },
+    qualification: {
+      score: qualification.score,
+      qualified: readiness.qualified,
+      intent: qualification.signals.intent,
+      tags: qualification.tags
+    },
+    booking: {
+      pending: pendingBooking,
+      proposed_slots: proposedSlots,
+      note: bookingNote,
+      missing: readiness.missing
     }
   });
 }

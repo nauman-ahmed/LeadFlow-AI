@@ -1,0 +1,205 @@
+{
+  "name": "LeadFlow — Cal.com Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "leadflow/cal-webhook",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "node-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [200, 360],
+      "webhookId": "leadflow-cal-webhook"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "webhook_secret", "value": "REPLACE_WITH_CAL_WEBHOOK_SECRET" },
+            { "name": "supabase_url", "value": "REPLACE_WITH_SUPABASE_URL" },
+            { "name": "supabase_service_key", "value": "REPLACE_WITH_SUPABASE_SERVICE_ROLE_KEY" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [400, 360],
+      "notes": "Edit these three values once after import. They must match the same Cal.com webhook secret and Supabase project as the Next.js .env."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verify Cal.com HMAC and normalize the payload.\n// Cal.com sends: header `X-Cal-Signature-256: <hex>` computed as HMAC-SHA256\n// over the raw request body using the per-webhook secret.\n\nconst crypto = require('crypto');\n\nconst webhook = $input.first().json;\nconst config = $('Config').first().json;\n\nconst rawBody = webhook.bodyRaw || (typeof webhook.body === 'string' ? webhook.body : JSON.stringify(webhook.body || {}));\nconst headers = webhook.headers || {};\nconst providedRaw = (headers['x-cal-signature-256'] || headers['X-Cal-Signature-256'] || '').toString().trim();\nconst provided = providedRaw.replace(/^sha256=/, '');\n\nconst secret = config.webhook_secret || '';\nconst expected = secret\n  ? crypto.createHmac('sha256', secret).update(rawBody, 'utf8').digest('hex')\n  : '';\n\nlet valid = false;\nif (secret && provided && provided.length === expected.length) {\n  try {\n    valid = crypto.timingSafeEqual(Buffer.from(provided, 'hex'), Buffer.from(expected, 'hex'));\n  } catch (_) {\n    valid = false;\n  }\n}\n\n// Parse body if it came through as raw text.\nlet body;\ntry {\n  body = typeof webhook.body === 'object' && webhook.body !== null ? webhook.body : JSON.parse(rawBody);\n} catch (_) {\n  body = {};\n}\n\nconst payload = body.payload || {};\n\nreturn [{\n  json: {\n    valid,\n    triggerEvent: body.triggerEvent || '',\n    cal_booking_id: payload.uid || '',\n    cal_booking_numeric_id: payload.id || null,\n    start_at: payload.startTime || payload.start || null,\n    end_at: payload.endTime || payload.end || null,\n    attendee: (payload.attendees && payload.attendees[0]) || null,\n    metadata: payload.metadata || {},\n    raw_body: rawBody\n  }\n}];"
+      },
+      "id": "node-verify",
+      "name": "Verify Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 360]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.valid }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "node-if-valid",
+      "name": "Signature OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [820, 360]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: 'invalid_signature' } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "node-respond-401",
+      "name": "Respond 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1020, 520]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.triggerEvent }}",
+        "rules": {
+          "rules": [
+            { "operation": "equal", "value2": "BOOKING_CREATED",     "output": 0 },
+            { "operation": "equal", "value2": "BOOKING_RESCHEDULED", "output": 0 },
+            { "operation": "equal", "value2": "BOOKING_CANCELLED",   "output": 1 }
+          ]
+        },
+        "fallbackOutput": 2
+      },
+      "id": "node-switch",
+      "name": "Switch on Event",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [1020, 240]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Config').first().json.supabase_url }}/rest/v1/appointments?on_conflict=cal_booking_id",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $('Config').first().json.supabase_service_key }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Config').first().json.supabase_service_key }}" },
+            { "name": "Content-Type",  "value": "application/json" },
+            { "name": "Prefer",        "value": "resolution=merge-duplicates,return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  cal_booking_id: $json.cal_booking_id,\n  start_at: $json.start_at,\n  end_at: $json.end_at,\n  status: 'booked'\n} }}",
+        "options": {}
+      },
+      "id": "node-upsert-appt",
+      "name": "Upsert Appointment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1240, 140]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Config').first().json.supabase_url }}/rest/v1/appointments?cal_booking_id=eq.{{ $json.cal_booking_id }}",
+        "method": "PATCH",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $('Config').first().json.supabase_service_key }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Config').first().json.supabase_service_key }}" },
+            { "name": "Content-Type",  "value": "application/json" },
+            { "name": "Prefer",        "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { status: 'cancelled' } }}",
+        "options": {}
+      },
+      "id": "node-cancel-appt",
+      "name": "Mark Cancelled",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1240, 340]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, triggerEvent: $('Verify Signature').first().json.triggerEvent, cal_booking_id: $('Verify Signature').first().json.cal_booking_id, applied_at: new Date().toISOString() } }}",
+        "options": {}
+      },
+      "id": "node-respond-ok",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1500, 240]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, ignored: $('Verify Signature').first().json.triggerEvent } }}",
+        "options": {}
+      },
+      "id": "node-respond-ignored",
+      "name": "Respond Ignored",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1240, 540]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Config", "type": "main", "index": 0 }]]
+    },
+    "Config": {
+      "main": [[{ "node": "Verify Signature", "type": "main", "index": 0 }]]
+    },
+    "Verify Signature": {
+      "main": [[{ "node": "Signature OK?", "type": "main", "index": 0 }]]
+    },
+    "Signature OK?": {
+      "main": [
+        [{ "node": "Switch on Event", "type": "main", "index": 0 }],
+        [{ "node": "Respond 401",     "type": "main", "index": 0 }]
+      ]
+    },
+    "Switch on Event": {
+      "main": [
+        [{ "node": "Upsert Appointment", "type": "main", "index": 0 }],
+        [{ "node": "Mark Cancelled",     "type": "main", "index": 0 }],
+        [{ "node": "Respond Ignored",    "type": "main", "index": 0 }]
+      ]
+    },
+    "Upsert Appointment": {
+      "main": [[{ "node": "Respond OK", "type": "main", "index": 0 }]]
+    },
+    "Mark Cancelled": {
+      "main": [[{ "node": "Respond OK", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "tags": []
+}

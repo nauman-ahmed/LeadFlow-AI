@@ -138,7 +138,10 @@ create index if not exists summaries_conversation_id_idx on summaries(conversati
 create table if not exists appointments (
   id              uuid primary key default gen_random_uuid(),
   lead_id         uuid references leads(id) on delete cascade,
-  cal_booking_id  text,
+  -- Unique when set, multiple NULLs allowed under default NULLS DISTINCT.
+  -- Unconditional UNIQUE constraint (not a partial index) is required so
+  -- PostgREST upserts can target it via `?on_conflict=cal_booking_id`.
+  cal_booking_id  text unique,
   google_event_id text,
   start_at        timestamptz not null,
   end_at          timestamptz not null,
@@ -146,9 +149,6 @@ create table if not exists appointments (
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
-create unique index if not exists appointments_cal_booking_id_idx
-  on appointments(cal_booking_id)
-  where cal_booking_id is not null;
 create index if not exists appointments_lead_id_idx on appointments(lead_id);
 create index if not exists appointments_start_at_idx on appointments(start_at);
 
