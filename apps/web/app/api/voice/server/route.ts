@@ -4,7 +4,7 @@ import { assertVoiceServerAuthorized, VoiceWebhookAuthError } from '@/lib/voiceW
 import { collectToolCalls, executeVoiceToolCalls, vapiOneLine } from '@/lib/voiceToolExecutor';
 import { handleVoiceEndOfCallReport } from '@/lib/voicePostCall';
 
-/**
+/** 
  * Vapi assistant **server URL** target (also reachable via n8n `vapi-server-proxy`).
  *
  * Handles:
@@ -39,6 +39,7 @@ export async function POST(req: Request) {
   // `function-call` appears in some Vapi server message lists alongside `tool-calls`; treat the same.
   if (type === 'tool-calls' || type === 'function-call') {
     try {
+      console.log('Executing tool calls', msg);
       const sb = createServerClient();
       const { results } = await executeVoiceToolCalls(sb, msg);
       // `result` / `error` must be single-line strings. Optional `name` matches Vapi's own examples.
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
       if (process.env.NODE_ENV !== 'production') {
         console.info(
           '[voice/server] tool-calls response',
-          JSON.stringify({ count: resultsOut.length, toolCallIds: resultsOut.map((x) => x.toolCallId) })
+          JSON.stringify({ count: resultsOut.length, resultsOut })
         );
       }
       return NextResponse.json({ results: resultsOut }, { status: 200 });

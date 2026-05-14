@@ -27,7 +27,10 @@ export default async function AdminPage() {
     <div className="container">
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 20 }}>
         <h1 style={{ margin: 0 }}>Leads</h1>
-        <span className="muted small">{leads?.length ?? 0} total</span>
+        <span className="muted small" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <Link href="/admin/appointments">All appointments →</Link>
+          <span>{leads?.length ?? 0} leads</span>
+        </span>
       </div>
 
       {error && (

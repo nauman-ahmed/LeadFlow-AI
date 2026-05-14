@@ -108,7 +108,7 @@ After importing `cal-webhook.json` and opening it in n8n:
    - Secret: same as `webhook_secret` above.
 4. Test by creating a booking in the chat widget (or directly on Cal.com) and confirm a new row appears in Supabase `appointments`.
 
-> The chat-initiated booking path writes the appointment row immediately via the Next.js API, so this webhook is the **mirror** that keeps Supabase in sync when bookings are created/changed outside the chat. The workflow is idempotent on `cal_booking_id`.
+> The chat-initiated booking path writes the appointment row immediately via the Next.js API, so this webhook is the **mirror** that keeps Supabase in sync when bookings are created/changed outside the chat. The workflow is idempotent on `cal_booking_id`. When Cal echoes **`metadata.leadflow_lead_id`** (set by our API when booking from the app), the upsert includes **`lead_id`** so the row appears on **`/admin/leads/[id]`**. Pure Cal.com bookings often have **no** `lead_id` — use **`/admin/appointments`** to see every row.
 
 ## `vapi-server-proxy` (Sprint 4)
 

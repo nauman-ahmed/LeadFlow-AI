@@ -366,7 +366,7 @@ export async function executeVoiceToolCalls(
   const callIdRaw = call?.id;
   const callId = callIdRaw != null && String(callIdRaw).trim() !== '' ? String(callIdRaw).trim() : '';
   if (!callId) {
-    const ids = extractToolCallIds(message);
+    const ids = extractToolCallIds(message); 
     if (ids.length > 0) {
       return {
         results: ids.map((toolCallId) => ({

@@ -2,52 +2,77 @@ import Script from 'next/script';
 
 export default function HomePage() {
   return (
-    <main className="container">
-      <header style={{ marginBottom: 48 }}>
-        <span className="badge" style={{ marginBottom: 12 }}>Sprint 1 demo</span>
-        <h1 style={{ fontSize: '2.4rem', margin: '8px 0 12px' }}>LeadFlow AI</h1>
-        <p className="muted" style={{ fontSize: '1.1rem', maxWidth: 640 }}>
-          Inbound lead qualification across web chat and inbound phone. KB-grounded answers,
-          calendar booking, CRM sync via webhook, human handoff, multi-language.
-        </p>
-      </header>
+    <>
+      <div className="landing-top">
+        <div className="landing-top-inner">
+          <a className="landing-brand" href="/">
+            LeadFlow
+          </a>
+          <nav className="landing-nav" aria-label="Primary">
+            <a href="/admin">Leads</a>
+          </nav>
+        </div>
+      </div>
 
-      <section className="card" style={{ marginBottom: 24 }}>
-        <h2 style={{ marginTop: 0 }}>Try the chatbot</h2>
-        <p>
-          Click the chat bubble in the bottom-right corner. Each new visitor creates a lead row in
-          Supabase, which you can watch live in the{' '}
-          <a href="/admin">mock CRM dashboard</a>.
-        </p>
-        <ul style={{ paddingLeft: 20 }}>
-          <li>Replies are a deterministic stub today — AI lands in Sprint 2.</li>
-          <li>Toggle the language to <code>FR</code> in the widget header to see French.</li>
-          <li>Refresh <a href="/admin">/admin</a> after each message to see new rows.</li>
-        </ul>
-      </section>
+      <main>
+        <div className="landing-hero">
+          <h1>Capture every inbound conversation</h1>
+          <p className="landing-lede">
+            Web chat and phone inquiries land in one place. Your team sees transcripts, contact
+            details, and status—without digging through inboxes or spreadsheets.
+          </p>
+          <dl className="landing-metrics">
+            <div>
+              <dt>Live demo</dt>
+              <dd>Open the chat bubble ↘</dd>
+            </div>
+            <div>
+              <dt>Data</dt>
+              <dd>Supabase + dashboard</dd>
+            </div>
+            <div>
+              <dt>Stack</dt>
+              <dd>Next.js widget + API</dd>
+            </div>
+          </dl>
+        </div>
 
-      <section className="card">
-        <h2 style={{ marginTop: 0 }}>Embed snippet</h2>
-        <p className="muted small">Drop this on any HTML page to load the widget:</p>
-        <pre
-          style={{
-            background: '#0f172a',
-            color: '#e2e8f0',
-            padding: 16,
-            borderRadius: 8,
-            fontSize: '0.85rem',
-            overflowX: 'auto'
-          }}
-        >
-{`<script
+        <div className="landing-grid">
+          <section className="card">
+            <h2 className="landing-card-title">Try it</h2>
+            <p className="muted" style={{ margin: '0 0 12px', fontSize: '0.9375rem' }}>
+              Use the widget in the corner as a visitor would. Each session creates a lead you can
+              open in the{' '}
+              <a href="/admin">leads view</a>.
+            </p>
+            <ul className="landing-list">
+              <li>Replies are scripted for now; model-backed answers ship next.</li>
+              <li>Switch the header language to French to test localization.</li>
+              <li>After sending a message, refresh the leads list to see the row.</li>
+            </ul>
+          </section>
+
+          <section className="card" id="install">
+            <h2 className="landing-card-title">Add to your site</h2>
+            <p className="muted small" style={{ margin: 0 }}>
+              Replace the host with your deployed origin when you go live.
+            </p>
+            <pre className="landing-code">
+              {`<script
   src="https://your-domain.example/leadflow-widget.js"
   data-tenant="demo"
   data-language="en"
   data-api="https://your-domain.example/api/chat"
   async
 ></script>`}
-        </pre>
-      </section>
+            </pre>
+          </section>
+        </div>
+
+        <footer className="landing-foot">
+          LeadFlow — inbound qualification prototype. Not affiliated with any CRM vendor.
+        </footer>
+      </main>
 
       <Script
         src="/leadflow-widget.js"
@@ -55,6 +80,6 @@ export default function HomePage() {
         data-tenant="demo"
         data-language="en"
       />
-    </main>
+    </>
   );
 }

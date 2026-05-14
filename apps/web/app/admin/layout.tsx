@@ -16,12 +16,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Link href="/admin" style={{ color: 'white', fontWeight: 600, textDecoration: 'none' }}>
           LeadFlow · Mock CRM
         </Link>
-        <Link href="/" style={{ color: '#94a3b8', textDecoration: 'none' }}>
-          ← Back to demo
+        <Link href="/admin/appointments" style={{ color: '#94a3b8', fontSize: 14, textDecoration: 'none' }}>
+          Appointments
         </Link>
-        <span style={{ marginLeft: 'auto', color: '#94a3b8', fontSize: 12 }}>
-          Reads directly from Supabase · refresh to update
-        </span>
       </nav>
       {children}
     </div>
