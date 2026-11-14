@@ -2,7 +2,7 @@
 
 Inbound lead qualification across **web chat** and **inbound phone**, with knowledge-base grounded answers, calendar booking, CRM webhook sync, human handoff, and multi-language support.
 
-> Portfolio project mirroring a real Upwork brief. See [doc/EXECUTION_PLAN.md](./doc/EXECUTION_PLAN.md) for the sprint-by-sprint build plan and [doc/](./doc) for the full phase docs.
+> Portfolio project.
 
 ## Status
 
@@ -49,8 +49,7 @@ LeadFlow AI/
 ├── i18n/            Widget UI strings per language
 ├── kb/              Source knowledge base docs (Sprint 2)
 ├── evals/           KB evaluation set (Sprint 2)
-├── scripts/         Build helpers
-└── doc/             Project planning + phases + execution plan
+└── scripts/         Build helpers
 ```
 
 ## Quickstart
