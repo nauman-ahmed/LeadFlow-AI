@@ -363,7 +363,9 @@ export async function executeVoiceToolCalls(
   message: Record<string, unknown>
 ): Promise<{ results: VapiToolResult[] }> {
   const call = message.call as Record<string, unknown> | undefined;
-  const callIdRaw = call?.id;
+  // Vapi text chats (POST /chat, dashboard chat test) send `chat.id` instead of `call.id`.
+  const chat = message.chat as Record<string, unknown> | undefined;
+  const callIdRaw = call?.id ?? chat?.id;
   const callId = callIdRaw != null && String(callIdRaw).trim() !== '' ? String(callIdRaw).trim() : '';
   if (!callId) {
     const ids = extractToolCallIds(message); 
