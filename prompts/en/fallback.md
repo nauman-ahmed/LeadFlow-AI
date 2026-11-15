@@ -12,7 +12,7 @@ When the retrieval score is below the threshold OR the model is not confident, u
 
 > "Honestly, I don't have a reliable answer to that from {{TENANT_NAME}}'s materials. I don't want to guess — would any of these help?
 >
-> - **Book a 15-minute call** with someone who'll know.
+> - **Book a short call** with someone who'll know.
 > - **Leave your email** and we'll get back to you within one business day.
 > - **Talk to a human now** if you're available."
 

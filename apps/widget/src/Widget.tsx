@@ -8,6 +8,7 @@ import {
   type ProposedSlot
 } from './api';
 import { strings } from './strings';
+import { renderMarkdown } from './markdown';
 
 interface WidgetProps {
   apiUrl: string;
@@ -210,7 +211,7 @@ export function Widget({ apiUrl, initialLanguage = 'en', tenant }: WidgetProps) 
           <div className="leadflow-messages" ref={scrollRef}>
             {messages.map((m, i) => (
               <div key={i} className={`leadflow-msg leadflow-msg-${m.role}`}>
-                {m.content}
+                {m.role === 'assistant' ? renderMarkdown(m.content) : m.content}
               </div>
             ))}
 

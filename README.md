@@ -57,7 +57,7 @@ LeadFlow AI/
 
 - **Node 20+** (a `.nvmrc` is included — `nvm use` picks it up)
 - **n8n** running locally on `http://localhost:5678`
-- **Ollama** running locally on `http://localhost:11434` with `mistral:latest` and `nomic-embed-text` pulled
+- A **DashScope (Alibaba Cloud Model Studio) API key** for Qwen, set as `DASHSCOPE_API_KEY` in `.env`
 - A **Supabase** project
 
 ### 1. Configure secrets
@@ -122,8 +122,8 @@ npm run dev:widget # http://localhost:5173  (Vite test harness)
 | Voice | Vapi (Retell / Bland are drop-in alternates) — Sprint 4 |
 | Orchestration | n8n (self-hosted) |
 | Database | Supabase (Postgres + Auth + pgvector) |
-| LLM (dev) | Ollama: `mistral:latest` chat, `nomic-embed-text` embeddings |
-| LLM (prod) | OpenAI: `gpt-4o-mini` chat, `gpt-4o` summaries, `text-embedding-3-small` |
+| LLM | Qwen via DashScope: `qwen3.6-35b-a3b` chat, `text-embedding-v4` embeddings (768d) |
+| LLM (alternates) | `LLM_PROVIDER=openai` (`gpt-4o-mini`) or `LLM_PROVIDER=ollama` (`mistral:latest`, `nomic-embed-text`) |
 | Scheduling | Cal.com + Google Calendar — Sprint 3 |
 | Real CRM | HubSpot free (toggleable) — Sprint 6 |
 | Languages | English + French |

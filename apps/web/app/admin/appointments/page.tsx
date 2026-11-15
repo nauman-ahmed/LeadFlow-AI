@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 
 function formatDate(iso: string | null | undefined) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleString();
+  // Columns are labelled UTC; without timeZone this used the server's local zone.
+  return new Date(iso).toLocaleString('en-US', { timeZone: 'UTC' });
 }
 
 /** All Cal-linked rows — includes bookings with no lead (e.g. created only on cal.com). */

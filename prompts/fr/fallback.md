@@ -12,7 +12,7 @@ Lorsque le score de récupération est sous le seuil OU que le modèle n'est pas
 
 > « Honnêtement, je n'ai pas de réponse fiable à cette question dans les documents de {{TENANT_NAME}}. Je préfère ne pas deviner — l'une de ces options pourrait vous aider :
 >
-> - **Réserver un appel de 15 minutes** avec quelqu'un qui saura.
+> - **Réserver un court appel** avec quelqu'un qui saura.
 > - **Laisser votre email** et nous reviendrons vers vous sous un jour ouvré.
 > - **Parler à un humain maintenant** si vous êtes disponible. »
 

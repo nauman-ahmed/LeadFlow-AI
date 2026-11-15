@@ -1,5 +1,7 @@
 // Loads + validates env vars at request time. Throws clear errors when missing.
 
+export type LLMProvider = 'qwen' | 'openai' | 'ollama';
+
 function required(name: string): string {
   const v = process.env[name];
   if (!v) throw new Error(`Missing required env var: ${name}`);
@@ -27,7 +29,7 @@ export const env = {
   get LEADFLOW_DEFAULT_LANGUAGE() { return (optional('LEADFLOW_DEFAULT_LANGUAGE', 'en') as 'en' | 'fr'); },
   get LEADFLOW_TENANT_NAME() { return optional('LEADFLOW_TENANT_NAME', 'Acme CRM Onboarding'); },
   get LEADFLOW_RAG_SIMILARITY_THRESHOLD() {
-    return parseFloat(optional('LEADFLOW_RAG_SIMILARITY_THRESHOLD', '0.55'));
+    return parseFloat(optional('LEADFLOW_RAG_SIMILARITY_THRESHOLD', '0.35'));
   },
   get LEADFLOW_QUALIFICATION_THRESHOLD() {
     return parseInt(optional('LEADFLOW_QUALIFICATION_THRESHOLD', '60'), 10);
@@ -40,10 +42,21 @@ export const env = {
   get CAL_DEFAULT_TIMEZONE() { return optional('CAL_DEFAULT_TIMEZONE', 'UTC'); },
 
   // LLM provider selection
-  get LLM_PROVIDER() { return (optional('LLM_PROVIDER', 'ollama') as 'ollama' | 'openai'); },
+  get LLM_PROVIDER() { return (optional('LLM_PROVIDER', 'qwen') as LLMProvider); },
   get EMBEDDING_PROVIDER() {
-    return (optional('EMBEDDING_PROVIDER', optional('LLM_PROVIDER', 'ollama')) as 'ollama' | 'openai');
+    return (optional('EMBEDDING_PROVIDER', optional('LLM_PROVIDER', 'qwen')) as LLMProvider);
   },
+
+  // Qwen via Alibaba Cloud Model Studio (DashScope), OpenAI-compatible API
+  get DASHSCOPE_API_KEY() { return optional('DASHSCOPE_API_KEY'); },
+  get QWEN_BASE_URL() {
+    return optional('QWEN_BASE_URL', 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1').replace(/\/$/, '');
+  },
+  get QWEN_CHAT_MODEL() { return optional('QWEN_CHAT_MODEL', 'qwen3.6-35b-a3b'); },
+  get QWEN_EMBEDDING_MODEL() { return optional('QWEN_EMBEDDING_MODEL', 'text-embedding-v4'); },
+  /** Must match the vector(N) column in infra/supabase/schema.sql. */
+  get QWEN_EMBEDDING_DIMENSIONS() { return parseInt(optional('QWEN_EMBEDDING_DIMENSIONS', '768'), 10); },
+  get QWEN_ENABLE_THINKING() { return optional('QWEN_ENABLE_THINKING', 'false') === 'true'; },
 
   // OpenAI
   get OPENAI_API_KEY() { return optional('OPENAI_API_KEY'); },

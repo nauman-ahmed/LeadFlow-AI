@@ -179,7 +179,8 @@ create table if not exists kb_chunks (
 create index if not exists kb_chunks_document_id_idx on kb_chunks(document_id);
 create index if not exists kb_chunks_language_idx    on kb_chunks(language);
 
--- NOTE: vector(768) matches `nomic-embed-text` (the Ollama default for this project).
+-- NOTE: vector(768) matches Qwen `text-embedding-v4` requested at 768 dimensions
+--       (QWEN_EMBEDDING_DIMENSIONS, the default) and Ollama `nomic-embed-text`.
 --       If you switch to OpenAI `text-embedding-3-small` (1536d), recreate this
 --       table with vector(1536). Mixing dimensions in one column is not supported.
 create table if not exists kb_embeddings (

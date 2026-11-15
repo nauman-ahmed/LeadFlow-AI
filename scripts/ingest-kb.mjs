@@ -10,7 +10,7 @@
 //      so each run produces a clean state — easier to reason about during dev.
 //   3. Walks kb/en/ and kb/fr/, reading every *.md file.
 //   4. Parses YAML front matter, chunks the body by paragraph (~800 chars max),
-//      embeds each chunk via Ollama (or OpenAI, see EMBEDDING_PROVIDER).
+//      embeds each chunk via Qwen (or OpenAI / Ollama, see EMBEDDING_PROVIDER).
 //   5. Inserts kb_documents, kb_chunks, kb_embeddings rows.
 
 import { loadEnv, REPO_ROOT } from './_load-env.mjs';
@@ -24,12 +24,27 @@ import ws from 'ws';
 const {
   SUPABASE_URL,
   SUPABASE_SERVICE_ROLE_KEY,
-  EMBEDDING_PROVIDER = 'ollama',
+  LLM_PROVIDER = 'qwen',
+  EMBEDDING_PROVIDER = LLM_PROVIDER,
+  DASHSCOPE_API_KEY,
+  QWEN_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+  QWEN_EMBEDDING_MODEL = 'text-embedding-v4',
+  QWEN_EMBEDDING_DIMENSIONS = '768',
   OLLAMA_BASE_URL = 'http://localhost:11434',
   OLLAMA_EMBEDDING_MODEL = 'nomic-embed-text',
   OPENAI_API_KEY,
   OPENAI_EMBEDDING_MODEL = 'text-embedding-3-small'
 } = process.env;
+
+// Must match vector(N) on kb_embeddings.embedding in infra/supabase/schema.sql.
+const SCHEMA_DIMENSIONS = 768;
+
+const EMBEDDING_MODEL =
+  EMBEDDING_PROVIDER === 'qwen'
+    ? QWEN_EMBEDDING_MODEL
+    : EMBEDDING_PROVIDER === 'openai'
+      ? OPENAI_EMBEDDING_MODEL
+      : OLLAMA_EMBEDDING_MODEL;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error('[ingest-kb] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env');
@@ -47,6 +62,29 @@ const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 // -- Embedding -----------------------------------------------------------------
 
 async function embed(text) {
+  if (EMBEDDING_PROVIDER === 'qwen') {
+    if (!DASHSCOPE_API_KEY) throw new Error('DASHSCOPE_API_KEY missing');
+    const res = await fetch(`${QWEN_BASE_URL.replace(/\/$/, '')}/embeddings`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${DASHSCOPE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: QWEN_EMBEDDING_MODEL,
+        input: text,
+        dimensions: parseInt(QWEN_EMBEDDING_DIMENSIONS, 10),
+        encoding_format: 'float'
+      })
+    });
+    if (!res.ok) {
+      throw new Error(`Qwen embed ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    }
+    const j = await res.json();
+    const v = j.data[0].embedding;
+    return { vector: v, model: QWEN_EMBEDDING_MODEL, dimensions: v.length };
+  }
+
   if (EMBEDDING_PROVIDER === 'openai') {
     if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY missing');
     const res = await fetch('https://api.openai.com/v1/embeddings', {
@@ -191,9 +229,9 @@ async function ingestFile(path, language, tenantId) {
     try {
       const { vector, model, dimensions } = await embed(content);
 
-      if (dimensions !== 768 && EMBEDDING_PROVIDER === 'ollama') {
+      if (dimensions !== SCHEMA_DIMENSIONS) {
         console.error(
-          `   ✗ chunk ${i}: embedding dimension ${dimensions} != 768 (schema expects 768).`
+          `   ✗ chunk ${i}: embedding dimension ${dimensions} != ${SCHEMA_DIMENSIONS} (schema expects ${SCHEMA_DIMENSIONS}).`
         );
         continue;
       }
@@ -223,9 +261,7 @@ async function main() {
   const startedAt = Date.now();
   console.log('🧠 LeadFlow KB ingestion');
   console.log(`   provider: ${EMBEDDING_PROVIDER}`);
-  console.log(
-    `   model:    ${EMBEDDING_PROVIDER === 'openai' ? OPENAI_EMBEDDING_MODEL : OLLAMA_EMBEDDING_MODEL}`
-  );
+  console.log(`   model:    ${EMBEDDING_MODEL}`);
 
   const tenantId = await ensureTenant();
   console.log(`   tenant:   ${tenantId}`);

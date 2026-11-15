@@ -117,6 +117,29 @@ export const widgetCSS = `
   align-self: flex-start;
   border: 1px solid #e4e6eb;
   border-bottom-left-radius: 4px;
+  white-space: normal;
+}
+.leadflow-msg-assistant p,
+.leadflow-msg-assistant ul,
+.leadflow-msg-assistant ol {
+  margin: 0 0 8px;
+}
+.leadflow-msg-assistant > :last-child {
+  margin-bottom: 0;
+}
+.leadflow-msg-assistant ul,
+.leadflow-msg-assistant ol {
+  padding-left: 18px;
+}
+.leadflow-msg-assistant li + li {
+  margin-top: 3px;
+}
+.leadflow-msg-assistant code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  background: #f1f2f5;
+  padding: 1px 4px;
+  border-radius: 4px;
 }
 .leadflow-msg-error {
   background: #fee2e2;
