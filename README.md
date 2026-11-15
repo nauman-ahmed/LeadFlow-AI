@@ -2,34 +2,36 @@
 
 Inbound lead qualification across **web chat** and **inbound phone**, with knowledge-base grounded answers, calendar booking, CRM webhook sync, human handoff, and multi-language support.
 
-> Portfolio project mirroring a real Upwork brief. See [doc/EXECUTION_PLAN.md](./doc/EXECUTION_PLAN.md) for the sprint-by-sprint build plan and [doc/](./doc) for the full phase docs.
+> Portfolio project.
 
 ## Status
 
 | Sprint | Status | What it ships |
 | --- | --- | --- |
-| 0 | ✅ Done | Repo scaffold, Supabase schema, n8n stubs, prompts, i18n |
-| **1** | ✅ **Code complete** | Widget + Next.js chat API + mock CRM, end-to-end with stub replies |
-| 2 | Up next | RAG + LLM replies (Ollama / OpenAI) |
-| 3 | Pending | Calendar booking (Cal.com + Google) |
-| 4 | Pending | Voice agent (Vapi) |
-| 5 | Pending | Multi-language polish |
-| 6 | Pending | Real CRM sync + human handoff |
-| 7 | Pending | Tests + deploy + portfolio assets |
+| 0 | ✅ Done | Repo scaffold, Supabase schema, n8n workflows, prompts, i18n |
+| 1 | ✅ Done | Widget + Next.js chat API + mock CRM, end to end |
+| 2 | ✅ Done | RAG over Supabase pgvector + LLM replies (Ollama / OpenAI), KB ingest, KB eval set (EN 15, FR 11) and `npm run eval:kb` |
+| 3 | ✅ Done | Cal.com booking (availability + create booking), HMAC-SHA256 verified Cal.com webhooks, booking upsert on `cal_booking_id` so retries never double-book |
+| 4 | ✅ Done | Vapi voice agent: `/api/voice/server` with tools `capture_lead`, `search_kb`, `check_availability`, `create_booking`, `request_handoff`; shared-secret webhook auth |
+| 5 | 🟡 Partly done | English + French prompts, UI strings and knowledge base |
+| 6 | 🟡 Partly done | Human handoff (chat event + voice tool) done; CRM sync is still a stub n8n workflow |
+| 7 | 🟡 Partly done | Demo videos in `demo/`; automated tests and hosted deploy still to do |
 
 ## Architecture (current)
 
 ```
-┌─────────────┐         ┌────────────────────┐       ┌──────────────┐
-│  Widget     │──HTTP──▶│  Next.js (apps/web)│──────▶│   Supabase   │
-│ (Vite/JS)   │         │  /api/chat/*       │       │  (Postgres + │
-└─────────────┘         │  /admin (mock CRM) │       │   pgvector)  │
-                        └─────────┬──────────┘       └──────────────┘
-                                  │
-                                  ▼
-                            ┌──────────┐
-                            │   n8n    │  ← Stub reply now; RAG in Sprint 2
-                            └──────────┘
+┌─────────────┐         ┌────────────────────────┐       ┌──────────────┐
+│  Widget     │──HTTP──▶│  Next.js (apps/web)    │──────▶│   Supabase   │
+│ (Vite/JS)   │         │  /api/chat/*           │       │  (Postgres + │
+└─────────────┘         │  /api/voice/server     │       │   pgvector)  │
+                        │  /admin (mock CRM)     │       └──────────────┘
+┌─────────────┐         └──┬──────────┬──────────┘
+│ Vapi voice  │──tools────▶│          │
+│   agent     │            ▼          ▼
+└─────────────┘      ┌──────────┐  ┌──────────┐
+                     │ Cal.com  │  │   n8n    │  cal-webhook (HMAC check),
+                     │ bookings │  │          │  chat-turn-handler, crm-sync,
+                     └──────────┘  └──────────┘  vapi-server-proxy
 ```
 
 ## Repo layout
@@ -47,8 +49,7 @@ LeadFlow AI/
 ├── i18n/            Widget UI strings per language
 ├── kb/              Source knowledge base docs (Sprint 2)
 ├── evals/           KB evaluation set (Sprint 2)
-├── scripts/         Build helpers
-└── doc/             Project planning + phases + execution plan
+└── scripts/         Build helpers
 ```
 
 ## Quickstart
