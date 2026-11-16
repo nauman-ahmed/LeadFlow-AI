@@ -138,6 +138,7 @@ npm run dev:widget # http://localhost:5173  (Vite test harness)
 | `npm run build:widget` | Build embeddable bundle + copy to web/public |
 | `npm run build:web` | Build Next.js production bundle |
 | `npm run typecheck` | TypeScript check across workspaces |
+| `npm run voice:gate` | Local proxy on :3002 that exposes only `POST /api/voice/server`; put your tunnel (e.g. `cloudflared tunnel --url http://127.0.0.1:3002`) in front of this, never in front of the app, so `/admin` stays private |
 
 ## Cost target
 

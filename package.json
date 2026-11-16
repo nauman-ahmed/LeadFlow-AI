@@ -22,6 +22,7 @@
     "ingest:kb": "node scripts/ingest-kb.mjs",
     "eval:kb": "node scripts/eval-kb.mjs",
     "test:calcom": "node scripts/test-calcom.mjs",
+    "voice:gate": "node scripts/voice-gate.mjs",
     "test:voice-local": "node scripts/test-voice-local.mjs"
   },
   "dependencies": {
