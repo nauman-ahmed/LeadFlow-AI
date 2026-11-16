@@ -135,24 +135,62 @@ function parseFrontMatter(raw) {
   return { meta, body: m[2] };
 }
 
+// Section-aware chunking. Whole markdown sections (heading + body) are packed
+// into chunks up to maxChars, so neighbouring sections keep each other's
+// context, but a heading is never separated from its body: bullets under
+// "What we don't do" were once retrieved without that heading and read as
+// things we DO offer. Chunks that start below the page title are prefixed with
+// the heading path (e.g. "Services overview › What we don't do").
 function chunkText(text, { maxChars = 800 } = {}) {
   const paragraphs = text.split(/\n\n+/).map((p) => p.trim()).filter(Boolean);
-  const chunks = [];
-  let current = '';
+
+  // 1. Group paragraphs into sections, each remembering its heading path.
+  const sections = [];
+  const path = [];
   for (const p of paragraphs) {
-    if (!current) {
-      current = p.length > maxChars ? p.slice(0, maxChars) : p;
-      continue;
-    }
-    const next = `${current}\n\n${p}`;
-    if (next.length > maxChars) {
-      chunks.push(current);
-      current = p.length > maxChars ? p.slice(0, maxChars) : p;
+    const h = !p.includes('\n') && p.match(/^(#{1,6})\s+(.+)$/);
+    if (h) {
+      const level = h[1].length;
+      path.length = level - 1;
+      path[level - 1] = h[2].trim();
+      sections.push({ path: path.filter(Boolean), heading: p, paras: [] });
     } else {
-      current = next;
+      if (sections.length === 0) sections.push({ path: [], heading: '', paras: [] });
+      sections[sections.length - 1].paras.push(p);
     }
   }
-  if (current) chunks.push(current);
+
+  // 2. Pack sections into chunks.
+  const chunks = [];
+  let current = '';
+  const flush = () => { if (current) chunks.push(current); current = ''; };
+  const parentCrumb = (s) => s.path.slice(0, -1).join(' › ');
+
+  for (const s of sections) {
+    const text = [s.heading, ...s.paras].filter(Boolean).join('\n\n');
+    if (!text) continue;
+    if (!current) {
+      const crumb = parentCrumb(s);
+      const start = crumb ? `${crumb}\n\n${text}` : text;
+      if (start.length <= maxChars) { current = start; continue; }
+    } else if (`${current}\n\n${text}`.length <= maxChars) {
+      current = `${current}\n\n${text}`;
+      continue;
+    }
+    flush();
+    // Section alone is too big (or didn't fit): split by paragraph, repeating
+    // the full heading path on every piece.
+    const crumb = s.path.join(' › ');
+    const room = maxChars - crumb.length - 2;
+    let body = '';
+    for (const p of s.paras) {
+      const piece = p.length > room ? p.slice(0, room) : p;
+      if (body && `${body}\n\n${piece}`.length > room) { chunks.push(crumb ? `${crumb}\n\n${body}` : body); body = ''; }
+      body = body ? `${body}\n\n${piece}` : piece;
+    }
+    if (body) current = crumb ? `${crumb}\n\n${body}` : body;
+  }
+  flush();
   return chunks;
 }
 
