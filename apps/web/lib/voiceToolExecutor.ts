@@ -334,13 +334,37 @@ async function runOneTool(
           timestamp: new Date().toISOString()
         }).catch((err) => console.error('[voice] handoff crm-sync failed', err));
 
+        // This tool only flags the lead for a callback; there is no live transfer.
+        // Spell that out so the agent never tells the caller they are "connected".
+        const { data: lead } = await sb
+          .from('leads')
+          .select('email, phone')
+          .eq('id', ctx.leadId)
+          .maybeSingle();
+        const contactOnFile = Boolean(lead?.email || lead?.phone);
+        const fr = ctx.language === 'fr';
+        const say = fr
+          ? "J'ai transmis votre demande à un membre de l'équipe, qui vous recontactera. Personne ne rejoint cet appel maintenant."
+          : "I've passed this to a teammate, who will get back to you. Nobody is joining this call right now.";
+        const next = contactOnFile
+          ? null
+          : fr
+            ? "Aucun contact enregistré : demandez le nom et l'e-mail de l'appelant, puis appelez capture_lead."
+            : "No contact details on file: ask for the caller's name and email, then call capture_lead.";
+
         return {
           toolCallId,
           name: rawName,
           result: vapiOneLine(
-            ctx.language === 'fr'
-              ? "J'ai signalé qu'un humain doit reprendre la conversation."
-              : 'I have flagged this conversation for a human teammate to follow up.'
+            JSON.stringify({
+              ok: true,
+              status: 'flagged_for_callback',
+              live_transfer: false,
+              rule: 'Do not say the caller is connected or transferred. Say they will be contacted.',
+              say,
+              contact_on_file: contactOnFile,
+              ...(next && { next })
+            })
           )
         };
       }

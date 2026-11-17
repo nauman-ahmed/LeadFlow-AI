@@ -44,31 +44,41 @@ const KEYWORDS: Record<
   Language,
   Record<'demo' | 'pricing' | 'integration' | 'support' | 'useCase' | 'teamSize' | 'urgency' | 'nameHint', string[]>
 > = {
+  // Keywords match whole words/phrases only (see `hits`), so "book" no longer
+  // matches "Facebook". Booking intent uses "a call" rather than "call" so
+  // "call recordings" isn't read as a booking request. Support phrases describe a
+  // problem; bare "help"/"support" are left out because "help us migrate" and
+  // "which CRMs do you support?" are sales questions, not support requests.
   en: {
-    demo: ['demo', 'book', 'schedule', 'meeting', 'call', 'talk to sales', 'introductory'],
-    pricing: ['price', 'pricing', 'cost', 'quote', 'plan', 'subscription'],
-    integration: ['integrate', 'integration', 'api', 'webhook', 'hubspot', 'salesforce', 'crm'],
-    support: ['issue', 'bug', 'broken', 'not working', 'help', 'support'],
+    demo: ['demo', 'book', 'schedule', 'meeting', 'a call', 'talk to sales', 'introductory'],
+    pricing: ['price', 'prices', 'pricing', 'cost', 'costs', 'quote', 'plan', 'plans', 'subscription'],
+    integration: ['integrate', 'integration', 'integrations', 'api', 'webhook', 'hubspot', 'salesforce', 'crm', 'crms'],
+    support: ['issue', 'issues', 'bug', 'bugs', 'broken', 'not working', "isn't working", "doesn't work", 'error', 'errors', 'support ticket'],
     useCase: ['use case', 'workflow', 'we want', 'our team', 'our company', 'we need', 'help us'],
-    teamSize: ['users', 'seats', 'people', 'team of', 'employees', 'agents'],
-    urgency: ['urgent', 'asap', 'this week', 'today', 'tomorrow', 'soon', 'deadline'],
+    teamSize: ['users', 'seats', 'people', 'team of', 'employees', 'agents', 'reps'],
+    urgency: ['urgent', 'asap', 'as soon as possible', 'this week', 'by tomorrow', 'soon', 'deadline', 'right away'],
     nameHint: ['my name is', "i'm ", 'i am ', 'this is ']
   },
   fr: {
-    demo: ['démo', 'demo', 'réserver', 'rendez-vous', 'rdv', 'rencontre', 'appel'],
-    pricing: ['prix', 'tarif', 'tarifs', 'devis', 'coût', 'abonnement', 'forfait'],
-    integration: ['intégration', 'intégrer', 'api', 'webhook', 'crm', 'hubspot', 'salesforce'],
-    support: ['problème', 'bug', 'cassé', 'aide', 'support', 'ne fonctionne pas'],
+    demo: ['démo', 'demo', 'réserver', 'rendez-vous', 'rdv', 'rencontre', 'un appel'],
+    pricing: ['prix', 'tarif', 'tarifs', 'devis', 'coût', 'coûts', 'abonnement', 'forfait', 'forfaits'],
+    integration: ['intégration', 'intégrations', 'intégrer', 'api', 'webhook', 'crm', 'hubspot', 'salesforce'],
+    support: ['problème', 'problèmes', 'bug', 'bugs', 'cassé', 'ne fonctionne pas', 'ne marche pas', 'erreur', 'erreurs', 'panne'],
     useCase: ['cas d’usage', "cas d'usage", 'notre équipe', 'notre entreprise', 'nous voulons', 'nous avons besoin'],
-    teamSize: ['utilisateurs', 'sièges', 'personnes', 'équipe de', 'employés', 'agents'],
-    urgency: ['urgent', 'urgence', 'cette semaine', 'demain', 'aujourd’hui', "aujourd'hui", 'bientôt'],
+    teamSize: ['utilisateurs', 'sièges', 'personnes', 'équipe de', 'employés', 'agents', 'commerciaux'],
+    urgency: ['urgent', 'urgence', 'cette semaine', "d'ici demain", 'd’ici demain', 'dès que possible', 'bientôt'],
     nameHint: ['je m’appelle', "je m'appelle", 'je suis ', "c'est ", 'c’est ']
   }
 };
 
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** True when any needle appears as a whole word or phrase (not inside another word). */
 function hits(haystack: string, needles: string[]): boolean {
-  const h = haystack.toLowerCase();
-  return needles.some((n) => h.includes(n));
+  const h = haystack.toLowerCase().replace(/’/g, "'");
+  return needles.some((n) =>
+    new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(n.toLowerCase().replace(/’/g, "'"))}(?![\\p{L}\\p{N}])`, 'u').test(h)
+  );
 }
 
 export function extractContact(turns: TranscriptTurn[]): ContactExtract {
@@ -128,11 +138,13 @@ export function qualify(turns: TranscriptTurn[], language: Language = 'en'): Qua
   const teamSizeMentioned = hits(userText, kw.teamSize);
   const urgencyMentioned = hits(userText, kw.urgency);
 
+  // Order matters: a problem report ("our HubSpot is broken") is support even
+  // though it names a CRM, so support is checked before integration.
   let intent: QualificationResult['signals']['intent'] = 'general';
   if (hits(userText, kw.demo)) intent = 'demo';
   else if (hits(userText, kw.pricing)) intent = 'pricing';
-  else if (hits(userText, kw.integration)) intent = 'integration';
   else if (hits(userText, kw.support)) intent = 'support';
+  else if (hits(userText, kw.integration)) intent = 'integration';
 
   const tags: string[] = [`intent:${intent}`];
   let score = 0;
