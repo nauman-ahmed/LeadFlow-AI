@@ -9,9 +9,17 @@ source_uri: "kb/fr/pricing.md"
 
 Nous proposons trois forfaits. Tous les prix sont des forfaits fixes en USD, facturés 50 % à la signature et 50 % au lancement. Pas de surprise de facturation à l'heure.
 
+## Les forfaits en un coup d'œil
+
+| Forfait | Prix | Idéal pour | Délai typique |
+|---|---|---|---|
+| Starter (le moins cher) | 4 500 $ | Moins de 5 commerciaux | 2 à 3 semaines |
+| Growth | 9 500 $ | 5 à 15 commerciaux | 4 à 6 semaines |
+| Scale (le plus cher, le plus complet) | 18 000 $ | 15 à 50 commerciaux ou GTM complexe | 8 à 10 semaines |
+
 ## Starter — 4 500 $
 
-Idéal pour les équipes de moins de 5 commerciaux passant de feuilles de calcul ou d'un CRM gratuit.
+Prix : 4 500 $ forfaitaire. Idéal pour les équipes de moins de 5 commerciaux passant de feuilles de calcul ou d'un CRM gratuit.
 
 - Atelier de sélection du CRM (HubSpot ou Pipedrive recommandés à cette taille).
 - Jusqu'à 5 000 contacts et 500 affaires migrés.
@@ -22,7 +30,7 @@ Idéal pour les équipes de moins de 5 commerciaux passant de feuilles de calcul
 
 ## Growth — 9 500 $
 
-Idéal pour les équipes de 5 à 15 commerciaux remplaçant un CRM existant.
+Prix : 9 500 $ forfaitaire. Idéal pour les équipes de 5 à 15 commerciaux remplaçant un CRM existant.
 
 - Tout ce que contient Starter.
 - Jusqu'à 25 000 contacts et 5 000 affaires migrés, y compris l'historique d'activité.
@@ -34,7 +42,7 @@ Idéal pour les équipes de 5 à 15 commerciaux remplaçant un CRM existant.
 
 ## Scale — 18 000 $
 
-Idéal pour les équipes de 15 à 50 commerciaux ou les approches GTM complexes (PLG + sales-assist, multi-régions, partenaires).
+Prix : 18 000 $ forfaitaire, notre forfait le plus cher et le plus complet. Idéal pour les équipes de 15 à 50 commerciaux ou les approches GTM complexes (PLG + sales-assist, multi-régions, partenaires).
 
 - Tout ce que contient Growth.
 - Jusqu'à 100 000 contacts et affaires illimitées.

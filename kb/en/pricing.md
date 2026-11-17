@@ -9,9 +9,17 @@ source_uri: "kb/en/pricing.md"
 
 We offer three packages. All prices are flat fees in USD, billed 50% on signing and 50% on go-live. No hourly billing surprises.
 
+## Packages at a glance
+
+| Package | Price | Best for | Typical timeline |
+|---|---|---|---|
+| Starter (least expensive) | $4,500 | Under 5 sales reps | 2–3 weeks |
+| Growth | $9,500 | 5–15 reps | 4–6 weeks |
+| Scale (most expensive, most complete) | $18,000 | 15–50 reps or complex GTM | 8–10 weeks |
+
 ## Starter — $4,500
 
-Best for teams with under 5 sales reps moving off spreadsheets or a free CRM tier.
+Price: $4,500 flat fee. Best for teams with under 5 sales reps moving off spreadsheets or a free CRM tier.
 
 - CRM selection workshop (HubSpot or Pipedrive recommended at this size).
 - Up to 5,000 contacts and 500 deals migrated.
@@ -22,7 +30,7 @@ Best for teams with under 5 sales reps moving off spreadsheets or a free CRM tie
 
 ## Growth — $9,500
 
-Best for teams with 5–15 reps replacing an existing CRM.
+Price: $9,500 flat fee. Best for teams with 5–15 reps replacing an existing CRM.
 
 - Everything in Starter.
 - Up to 25,000 contacts and 5,000 deals migrated, including historical activities.
@@ -34,7 +42,7 @@ Best for teams with 5–15 reps replacing an existing CRM.
 
 ## Scale — $18,000
 
-Best for teams with 15–50 reps or complex GTM motions (PLG + sales-assist, multi-region, channel partners).
+Price: $18,000 flat fee, our most expensive and most complete package. Best for teams with 15–50 reps or complex GTM motions (PLG + sales-assist, multi-region, channel partners).
 
 - Everything in Growth.
 - Up to 100,000 contacts and unlimited deals.
