@@ -14,7 +14,7 @@ Lorsque le score de récupération est sous le seuil OU que le modèle n'est pas
 >
 > - **Réserver un court appel** avec quelqu'un qui saura.
 > - **Laisser votre email** et nous reviendrons vers vous sous un jour ouvré.
-> - **Parler à un humain maintenant** si vous êtes disponible. »
+> - **Demander qu'un membre de l'équipe** vous recontacte. »
 
 # Règles
 

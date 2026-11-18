@@ -14,7 +14,7 @@ When the retrieval score is below the threshold OR the model is not confident, u
 >
 > - **Book a short call** with someone who'll know.
 > - **Leave your email** and we'll get back to you within one business day.
-> - **Talk to a human now** if you're available."
+> - **Ask for a teammate** to follow up with you."
 
 # Rules
 

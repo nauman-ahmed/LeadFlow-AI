@@ -138,6 +138,8 @@ export function Widget({ apiUrl, initialLanguage = 'en', tenant }: WidgetProps) 
         timezone: timezoneRef.current
       });
       setMessages((m) => [...m, { role: 'assistant', content: res.reply, ts: Date.now() }]);
+      // The server follows the language the visitor writes in; keep the header in sync.
+      if (res.language && res.language !== language) changeLanguage(res.language);
       applyBookingBlock(res.booking);
     } catch (err) {
       console.error('[leadflow] message failed', err);

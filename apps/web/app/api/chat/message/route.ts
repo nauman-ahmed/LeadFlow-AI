@@ -7,6 +7,7 @@ import { loadPrompt, fillTemplate, promptVersion } from '@/lib/prompts';
 import { env, type LLMProvider } from '@/lib/env';
 import type { Language } from '@/lib/types';
 import { qualify, bookingReadiness, type TranscriptTurn } from '@/lib/qualify';
+import { detectLanguage, isHandoffRequest, handoffReply, handoffEmailReply } from '@/lib/chatIntents';
 import {
   checkAvailability,
   pickProposedSlots,
@@ -17,12 +18,17 @@ import {
 } from '@/lib/calcom';
 
 const HISTORY_TURNS = 6; // last N messages used as conversation context
+const KB_CONTEXT_CHUNKS = 5; // chunks are ≤800 chars; 3 cut off e.g. the Growth package section
+const EMAIL_RE = /[^\s@]+@[^\s@]+\.[^\s@]+/;
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const sessionId: string = body.session_id;
   const message: string = String(body.message ?? '').slice(0, 4000);
-  const language: Language = body.language === 'fr' ? 'fr' : 'en';
+  // The widget sends its header language; follow the visitor if they clearly
+  // write in the other one, so retrieval uses the right-language KB.
+  const requestedLanguage: Language = body.language === 'fr' ? 'fr' : 'en';
+  const language: Language = detectLanguage(message, requestedLanguage);
   const timezone: string =
     (typeof body.timezone === 'string' && body.timezone) || defaultTimeZone();
 
@@ -38,7 +44,7 @@ export async function POST(req: Request) {
   // 1. Find or create the conversation (anchored by session_id).
   const { data: existing, error: lookupErr } = await sb
     .from('conversations')
-    .select('id, lead_id')
+    .select('id, lead_id, handoff')
     .eq('external_id', sessionId)
     .maybeSingle();
 
@@ -139,6 +145,34 @@ export async function POST(req: Request) {
   const qualification = qualify(turns, language);
   const readiness = bookingReadiness(qualification, env.LEADFLOW_QUALIFICATION_THRESHOLD);
 
+  // 4b. Handoff. Chat has no live agent, so flag the lead for a teammate and
+  //     say so plainly instead of letting the LLM promise a human "now".
+  const wantsHuman = isHandoffRequest(message);
+  const handoffActive = wantsHuman || Boolean(existing?.handoff);
+  let handoffText: string | null = null;
+  if (wantsHuman) {
+    const { data: leadRow } = await sb.from('leads').select('email').eq('id', leadId).maybeSingle();
+    const email = qualification.contact.email ?? leadRow?.email ?? null;
+    await sb.from('conversations').update({ handoff: true }).eq('id', conversationId);
+    await sb.from('messages').insert({
+      conversation_id: conversationId,
+      role: 'tool',
+      content: JSON.stringify({ tool: 'request_handoff', reason: 'visitor asked for a person' })
+    });
+    callN8n('/leadflow/crm-sync', {
+      event: 'lead.handoff',
+      lead: { id: leadId, source: 'web', language, status: 'handoff' },
+      conversation: { id: conversationId, channel: 'web' },
+      reason: 'visitor asked for a person',
+      correlation_id: sessionId,
+      timestamp: new Date().toISOString()
+    }).catch((err) => console.error('[chat/message] handoff sync failed', err));
+    handoffText = handoffReply(language, email);
+  } else if (existing?.handoff && qualification.contact.email && EMAIL_RE.test(message)) {
+    // They asked for a person earlier and are now sharing how to reach them.
+    handoffText = handoffEmailReply(language, qualification.contact.email);
+  }
+
   // 5. Propose Cal.com slots if qualified + email available + Cal configured.
   let proposedSlots: AvailableSlot[] | null = null;
   let pendingBooking: {
@@ -148,7 +182,9 @@ export async function POST(req: Request) {
   } | null = null;
   let bookingNote: string | null = null;
 
-  if (readiness.qualified && readiness.canBook && isCalConfigured()) {
+  if (handoffText) {
+    // Handoff turn: no slot offer, the reply is fixed below.
+  } else if (readiness.qualified && readiness.canBook && isCalConfigured()) {
     try {
       const allSlots = await checkAvailability({ timeZone: timezone, limit: 30 });
       proposedSlots = pickProposedSlots(allSlots, 3);
@@ -198,8 +234,11 @@ export async function POST(req: Request) {
   let providerUsed: LLMProvider = env.LLM_PROVIDER;
   let promptName = 'system';
 
-  try {
-    const hits = await searchKB(message, language, { threshold: 0.35, limit: 5 });
+  if (handoffText) {
+    reply = handoffText;
+    promptName = 'handoff';
+  } else try {
+    const hits = await searchKB(message, language, { threshold: 0.35, limit: KB_CONTEXT_CHUNKS });
     kbHits = hits.length;
     topScore = hits[0]?.similarity ?? 0;
 
@@ -218,7 +257,7 @@ export async function POST(req: Request) {
       promptName = 'fallback';
     }
 
-    const context = grounded ? formatContext(hits.slice(0, 3)) : '';
+    const context = grounded ? formatContext(hits.slice(0, KB_CONTEXT_CHUNKS)) : '';
     const system = fillTemplate(systemTemplate, {
       TENANT_NAME: env.LEADFLOW_TENANT_NAME,
       KB_CONTEXT: context,
@@ -263,7 +302,9 @@ export async function POST(req: Request) {
   if (qualification.contact.name) leadPatch.name = qualification.contact.name;
   if (qualification.contact.email) leadPatch.email = qualification.contact.email;
   if (qualification.contact.phone) leadPatch.phone = qualification.contact.phone;
-  if (readiness.qualified) leadPatch.status = 'qualified';
+  if (handoffActive) leadPatch.status = 'handoff';
+  else if (readiness.qualified) leadPatch.status = 'qualified';
+  if (language !== requestedLanguage) leadPatch.language = language;
   // Merge tags (don't overwrite the source tags from creation).
   const newTagSet = new Set<string>(qualification.tags);
   const { data: leadTagRow } = await sb

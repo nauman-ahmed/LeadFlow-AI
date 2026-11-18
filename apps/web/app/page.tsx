@@ -46,9 +46,10 @@ export default function HomePage() {
               <a href="/admin">leads view</a>.
             </p>
             <ul className="landing-list">
-              <li>Replies are scripted for now; model-backed answers ship next.</li>
-              <li>Switch the header language to French to test localization.</li>
-              <li>After sending a message, refresh the leads list to see the row.</li>
+              <li>Answers come from the knowledge base and cite their source.</li>
+              <li>Write in French (or switch the header to FR) and it answers in French.</li>
+              <li>Ask to book an intro call to see real Cal.com slots.</li>
+              <li>Each conversation shows up in the password-protected leads view.</li>
             </ul>
           </section>
 
