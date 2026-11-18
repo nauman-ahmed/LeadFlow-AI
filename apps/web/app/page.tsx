@@ -72,7 +72,14 @@ export default function HomePage() {
             LeadFlow
           </a>
           <nav className="landing-nav" aria-label="Primary">
-            <a href="/admin">Leads</a>
+            <a href="#try-it">Try it</a>
+            <a href="#knowledge-base">Knowledge base</a>
+            <a href="#more-to-try">Sample questions</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#install">Add to your site</a>
+            <a href="/admin" className="nav-cta">
+              Leads
+            </a>
           </nav>
         </div>
       </div>
@@ -101,7 +108,7 @@ export default function HomePage() {
         </div>
 
         <div className="landing-grid">
-          <section className="card">
+          <section className="card" id="try-it">
             <h2 className="landing-card-title">Try it</h2>
             <p className="muted" style={{ margin: '0 0 12px', fontSize: '0.9375rem' }}>
               Use the widget in the corner as a visitor would. Each session creates a lead you can
@@ -166,7 +173,7 @@ export default function HomePage() {
           </div>
 
           <div className="kb-more">
-            <article className="card">
+            <article className="card" id="more-to-try">
               <h3 className="kb-doc-title">More to try</h3>
               <dl className="kb-try">
                 <dt>Book a call</dt>
@@ -200,7 +207,7 @@ export default function HomePage() {
               </dl>
             </article>
 
-            <article className="card">
+            <article className="card" id="how-it-works">
               <h3 className="kb-doc-title">How answers are found</h3>
               <ol className="landing-list">
                 <li>
