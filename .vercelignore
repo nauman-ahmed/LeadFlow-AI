@@ -1,0 +1,14 @@
+# Secrets live in Vercel environment variables, never in the upload.
+.env
+.env.*
+!.env.example
+
+node_modules
+.next
+apps/web/.next
+apps/widget/dist
+data
+n8n
+demo
+evals/reports
+*.log
