@@ -124,10 +124,32 @@ export function Widget({ apiUrl, initialLanguage = 'en', tenant }: WidgetProps) 
     });
   }
 
-  async function handleSend() {
-    const text = input.trim();
+  // Sample-question buttons on the host page call window.LeadFlow.ask(text):
+  // open the panel, then send once the session is ready.
+  const [pendingAsk, setPendingAsk] = useState<string | null>(null);
+  useEffect(() => {
+    const onAsk = (e: Event) => {
+      const text = (e as CustomEvent<{ text?: string }>).detail?.text?.trim();
+      if (!text) return;
+      setOpen(true);
+      setPendingAsk(text);
+    };
+    window.addEventListener('leadflow:ask', onAsk);
+    return () => window.removeEventListener('leadflow:ask', onAsk);
+  }, []);
+  useEffect(() => {
+    if (pendingAsk && sessionId && !busy) {
+      const text = pendingAsk;
+      setPendingAsk(null);
+      void handleSend(text);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAsk, sessionId, busy]);
+
+  async function handleSend(preset?: string) {
+    const text = (preset ?? input).trim();
     if (!text || !sessionId || busy) return;
-    setInput('');
+    if (preset === undefined) setInput('');
     setMessages((m) => [...m, { role: 'user', content: text, ts: Date.now() }]);
     setBusy(true);
     try {
@@ -255,7 +277,7 @@ export function Widget({ apiUrl, initialLanguage = 'en', tenant }: WidgetProps) 
               disabled={busy || booking}
               autoFocus
             />
-            <button onClick={handleSend} disabled={busy || booking || !input.trim()}>
+            <button onClick={() => handleSend()} disabled={busy || booking || !input.trim()}>
               {t.send}
             </button>
           </div>

@@ -69,14 +69,19 @@ function autoInit() {
   init(opts);
 }
 
+/** Open the widget and send `text` as the visitor (used by sample-question buttons). */
+function ask(text: string) {
+  window.dispatchEvent(new CustomEvent('leadflow:ask', { detail: { text } }));
+}
+
 declare global {
   interface Window {
-    LeadFlow?: { init: typeof init };
+    LeadFlow?: { init: typeof init; ask: typeof ask };
   }
 }
 
 if (typeof window !== 'undefined') {
-  window.LeadFlow = { init };
+  window.LeadFlow = { init, ask };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', autoInit);
@@ -85,4 +90,4 @@ if (typeof window !== 'undefined') {
   }
 }
 
-export { init };
+export { init, ask };
