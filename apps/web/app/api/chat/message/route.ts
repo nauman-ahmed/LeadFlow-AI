@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
 import { callN8n } from '@/lib/n8n';
-import { searchKB, formatContext } from '@/lib/rag';
+import { searchKB, formatContext, KB_CONTEXT_CHUNKS } from '@/lib/rag';
 import { chat, type ChatMessage } from '@/lib/llm';
 import { loadPrompt, fillTemplate, promptVersion } from '@/lib/prompts';
 import { env, type LLMProvider } from '@/lib/env';
@@ -18,7 +18,6 @@ import {
 } from '@/lib/calcom';
 
 const HISTORY_TURNS = 6; // last N messages used as conversation context
-const KB_CONTEXT_CHUNKS = 5; // chunks are ≤800 chars; 3 cut off e.g. the Growth package section
 const EMAIL_RE = /[^\s@]+@[^\s@]+\.[^\s@]+/;
 
 export async function POST(req: Request) {

@@ -1,6 +1,13 @@
 import { createServerClient } from './supabase';
 import { embed } from './llm';
 
+/**
+ * How many retrieved chunks go to the model, for chat and voice alike.
+ * Chunks are ≤800 chars; with 3, the Growth package section (ranked 4th,
+ * behind Scale's "Everything in Growth") never reached the model.
+ */
+export const KB_CONTEXT_CHUNKS = 5;
+
 export interface KBHit {
   chunk_id: string;
   document_id: string;

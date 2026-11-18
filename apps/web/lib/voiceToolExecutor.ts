@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { env } from '@/lib/env';
 import { callN8n } from '@/lib/n8n';
-import { searchKB, formatContext } from '@/lib/rag';
+import { searchKB, formatContext, KB_CONTEXT_CHUNKS } from '@/lib/rag';
 import {
   checkAvailability,
   pickProposedSlots,
@@ -230,14 +230,15 @@ async function runOneTool(
         if (!query.trim()) {
           return { toolCallId, name: rawName, error: vapiOneLine('query parameter required') };
         }
-        const hits = await searchKB(query, ctx.language, { threshold: 0.35, limit: 5 });
+        const hits = await searchKB(query, ctx.language, { threshold: 0.35, limit: KB_CONTEXT_CHUNKS });
         const text =
           hits.length > 0
-            ? formatContext(hits.slice(0, 3))
+            ? formatContext(hits.slice(0, KB_CONTEXT_CHUNKS))
             : ctx.language === 'fr'
               ? 'Aucun extrait pertinent trouvé dans la base de connaissances.'
               : 'No relevant knowledge base excerpts found.';
-        return { toolCallId, name: rawName, result: vapiOneLine(text, 2400) };
+        // Room for KB_CONTEXT_CHUNKS chunks of ≤800 chars plus their titles.
+        return { toolCallId, name: rawName, result: vapiOneLine(text, 4500) };
       }
       case 'check_availability': {
         if (!isCalConfigured()) {
