@@ -384,3 +384,48 @@ html { scroll-behavior: smooth; }
   margin: 10px 0 0;
 }
 .kb-try .kb-note { flex-basis: 100%; margin: 0; }
+
+/* Admin login page */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+}
+.login-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 16px 0 6px;
+}
+.login-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin: 12px 0 6px;
+}
+.login-input {
+  font: inherit;
+  font-size: 0.9375rem;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+}
+.login-input:focus { outline: 2px solid var(--primary); outline-offset: 1px; border-color: var(--primary); }
+.login-button { margin-top: 20px; justify-content: center; }
+.login-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  margin: 0 0 4px;
+}

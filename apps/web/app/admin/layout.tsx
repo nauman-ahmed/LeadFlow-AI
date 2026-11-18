@@ -19,6 +19,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Link href="/admin/appointments" style={{ color: '#94a3b8', fontSize: 14, textDecoration: 'none' }}>
           Appointments
         </Link>
+        <form method="post" action="/api/admin/logout" style={{ marginLeft: 'auto' }}>
+          <button
+            type="submit"
+            style={{
+              background: 'none',
+              border: '1px solid #334155',
+              borderRadius: 6,
+              color: '#cbd5e1',
+              fontSize: 13,
+              padding: '4px 10px',
+              cursor: 'pointer'
+            }}
+          >
+            Log out
+          </button>
+        </form>
       </nav>
       {children}
     </div>
